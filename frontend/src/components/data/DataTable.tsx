@@ -5,6 +5,8 @@ import { ReactNode } from 'react';
 export interface Column<T> {
   key: string;
   header: string;
+  headerClassName?: string;
+  cellClassName?: string;
   render?: (item: T) => ReactNode;
 }
 
@@ -41,42 +43,42 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="rounded-card border border-brand-200 bg-white py-12 text-center shadow-card">
-        <p className="text-sm text-brand-500">{emptyMessage}</p>
+      <div className="rounded-card border border-card-border bg-card-bg py-12 text-center shadow-card">
+        <p className="text-sm text-text-muted">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-200 bg-white shadow-card">
-      <table className="min-w-full divide-y divide-brand-200">
-        <thead className="bg-brand-50">
+    <div className="overflow-x-auto rounded-card border border-card-border bg-card-bg shadow-card">
+      <table className="w-full divide-y divide-card-border">
+        <thead className="bg-slate-50">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-500"
+                className={`px-6 py-3 text-[11px] font-bold uppercase tracking-[0.06em] text-text-muted ${col.headerClassName || 'text-left'}`}
               >
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-100">
+        <tbody className="divide-y divide-card-border">
           {data.map((item, idx) => (
             <tr
               key={getItemKey(item, idx)}
               onClick={() => onRowClick?.(item)}
               className={`${
                 onRowClick ? 'cursor-pointer' : ''
-              } transition-colors hover:bg-brand-50 ${
+              } transition-all duration-150 hover:bg-slate-50 ${
                 rowClassName ? rowClassName(item) : ''
               }`}
             >
               {columns.map((col) => (
                 <td
                   key={col.key}
-                  className="whitespace-nowrap px-6 py-4 text-sm text-brand-950"
+                  className={`px-6 py-4 text-sm text-text-primary ${col.cellClassName || ''}`}
                 >
                   {col.render
                     ? col.render(item)

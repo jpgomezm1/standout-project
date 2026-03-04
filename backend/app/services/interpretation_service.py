@@ -33,23 +33,10 @@ class InterpretationService:
     async def transcribe(self, audio_data: bytes) -> str:
         """Transcribe raw audio bytes into text via the LLM client.
 
-        The audio content is written to a temporary file and the path is
-        forwarded to the LLM client's ``transcribe_audio`` method.
-
         Returns the transcribed text, or an empty string on failure.
         """
-        import tempfile
-        import os
-
-        tmp_path: str | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                suffix=".ogg", delete=False
-            ) as tmp:
-                tmp.write(audio_data)
-                tmp_path = tmp.name
-
-            transcription = await self._llm_client.transcribe_audio(tmp_path)
+            transcription = await self._llm_client.transcribe_audio(audio_data)
             logger.info(
                 "Transcribed %d bytes of audio -> %d characters",
                 len(audio_data),
@@ -59,12 +46,36 @@ class InterpretationService:
         except Exception:
             logger.exception("Audio transcription failed")
             return ""
-        finally:
-            if tmp_path and os.path.exists(tmp_path):
-                try:
-                    os.unlink(tmp_path)
-                except OSError:
-                    logger.warning("Could not delete temp audio file: %s", tmp_path)
+
+    # -- Image analysis ------------------------------------------------------ #
+
+    async def analyze_image(self, image_data: bytes, caption: str = "") -> str:
+        """Analyze an image and return a text description of what it shows.
+
+        If a caption is provided it is included as context for the LLM.
+        Returns a description string, or empty string on failure.
+        """
+        try:
+            prompt = (
+                "Eres un asistente de operaciones para propiedades de alquiler. "
+                "Describe qué ves en esta imagen en español. Identifica si hay "
+                "algún daño, ítem roto, ítem faltante, problema de mantenimiento, "
+                "o cualquier situación que deba reportarse. Sé específico con los "
+                "objetos que ves."
+            )
+            if caption:
+                prompt += f"\n\nEl usuario envió esta imagen con el texto: \"{caption}\""
+
+            description = await self._llm_client.analyze_image(image_data, prompt)
+            logger.info(
+                "Analyzed image (%d bytes) -> %d chars description",
+                len(image_data),
+                len(description),
+            )
+            return description
+        except Exception:
+            logger.exception("Image analysis failed")
+            return ""
 
     # -- Text interpretation ------------------------------------------------- #
 

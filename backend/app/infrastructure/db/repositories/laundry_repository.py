@@ -66,6 +66,19 @@ class LaundryRepository(ILaundryRepository):
         result = await self._session.execute(stmt)
         return [self._to_domain(row) for row in result.scalars().all()]
 
+    async def get_latest_open_by_property(self, property_id: UUID) -> LaundryFlow | None:
+        """Return the most recent non-terminal flow for a property."""
+        stmt = (
+            select(LaundryFlowModel)
+            .where(LaundryFlowModel.property_id == property_id)
+            .where(LaundryFlowModel.status.in_(["sent", "in_progress"]))
+            .order_by(LaundryFlowModel.sent_at.desc())
+            .limit(1)
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalars().first()
+        return self._to_domain(model) if model else None
+
     async def get_by_id(self, id: UUID) -> LaundryFlow | None:
         model = await self._session.get(LaundryFlowModel, id)
         return self._to_domain(model) if model else None

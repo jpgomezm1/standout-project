@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.incident import (
@@ -105,3 +105,35 @@ class IncidentRepository(IIncidentRepository):
         await self._session.flush()
         await self._session.refresh(model)
         return self._to_domain(model)
+
+    async def get_latest_open_by_property(
+        self,
+        property_id: UUID,
+        item_name: str | None = None,
+    ) -> Incident | None:
+        stmt = (
+            select(IncidentModel)
+            .where(
+                and_(
+                    IncidentModel.property_id == property_id,
+                    IncidentModel.status != "resolved",
+                )
+            )
+            .order_by(IncidentModel.created_at.desc())
+        )
+
+        result = await self._session.execute(stmt)
+        open_incidents = result.scalars().all()
+
+        if not open_incidents:
+            return None
+
+        # If item_name provided, try to match by title
+        if item_name:
+            item_lower = item_name.lower()
+            for inc in open_incidents:
+                if item_lower in (inc.title or "").lower():
+                    return self._to_domain(inc)
+
+        # Fallback: return the most recent open incident
+        return self._to_domain(open_incidents[0])

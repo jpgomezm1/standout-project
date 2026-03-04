@@ -52,7 +52,7 @@ export default function ReservationsPage() {
         actions={
           <Link
             href={`/properties/${propertyId}`}
-            className="rounded-pill border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:border-brand-500 hover:shadow-card"
+            className="rounded-pill border border-card-border bg-white px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-indigo-300 hover:shadow-card"
           >
             Volver a Propiedad
           </Link>
@@ -77,7 +77,7 @@ export default function ReservationsPage() {
       />
 
       {isLoading ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <Skeleton rows={8} className="h-8 w-full" />
         </div>
       ) : viewMode === 'grid' ? (

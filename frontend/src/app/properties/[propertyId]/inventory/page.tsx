@@ -16,14 +16,14 @@ const columns: Column<InventoryItem>[] = [
     key: 'item_name',
     header: 'Nombre del Ítem',
     render: (item) => (
-      <span className="font-medium text-brand-950">{item.item_name}</span>
+      <span className="font-medium text-text-primary">{item.item_name}</span>
     ),
   },
   {
     key: 'category',
     header: 'Categoría',
     render: (item) => (
-      <span className="text-sm text-brand-600">{item.category}</span>
+      <span className="text-sm text-text-secondary">{item.category}</span>
     ),
   },
   {
@@ -32,7 +32,7 @@ const columns: Column<InventoryItem>[] = [
     render: (item) => (
       <span
         className={`text-sm font-medium ${
-          item.is_low_stock ? 'text-status-danger' : 'text-brand-950'
+          item.is_low_stock ? 'text-status-danger' : 'text-text-primary'
         }`}
       >
         {item.current_quantity}
@@ -43,7 +43,7 @@ const columns: Column<InventoryItem>[] = [
     key: 'expected_quantity',
     header: 'Cant. Esperada',
     render: (item) => (
-      <span className="text-sm text-brand-600">{item.expected_quantity}</span>
+      <span className="text-sm text-text-secondary">{item.expected_quantity}</span>
     ),
   },
   {
@@ -75,7 +75,7 @@ export default function InventoryPage() {
         actions={
           <Link
             href={`/properties/${propertyId}`}
-            className="rounded-pill border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:border-brand-500 hover:shadow-card"
+            className="rounded-pill border border-card-border bg-white px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-indigo-300 hover:shadow-card"
           >
             Volver a Propiedad
           </Link>
@@ -99,7 +99,7 @@ export default function InventoryPage() {
           data={inventory || []}
           emptyMessage="No se encontraron ítems de inventario"
           rowClassName={(item) =>
-            item.is_low_stock ? 'bg-status-danger-light' : ''
+            item.is_low_stock ? 'bg-badge-danger-bg' : ''
           }
         />
       )}

@@ -5,11 +5,11 @@ interface CountChipProps {
 }
 
 const colorMap: Record<string, string> = {
-  red: 'bg-status-danger-light text-status-danger-dark',
-  amber: 'bg-status-warning-light text-status-warning-dark',
-  blue: 'bg-status-info-light text-status-info-dark',
-  emerald: 'bg-status-success-light text-status-success-dark',
-  gray: 'bg-brand-100 text-brand-700',
+  red: 'bg-badge-danger-bg text-badge-danger-text',
+  amber: 'bg-teal-subtle text-teal-600',
+  blue: 'bg-badge-progress-bg text-badge-progress-text',
+  emerald: 'bg-badge-resolved-bg text-badge-resolved-text',
+  gray: 'bg-indigo-subtle text-indigo-700',
 };
 
 export default function CountChip({ count, label, color = 'gray' }: CountChipProps) {

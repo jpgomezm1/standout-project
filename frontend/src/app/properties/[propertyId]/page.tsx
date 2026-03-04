@@ -47,17 +47,21 @@ const incidentColumns: Column<Incident>[] = [
     key: 'title',
     header: 'Título',
     render: (i) => (
-      <span className="font-medium text-brand-950">{i.title}</span>
+      <span className="font-medium text-text-primary">{i.title}</span>
     ),
   },
   {
     key: 'priority',
     header: 'Prioridad',
+    headerClassName: 'text-center',
+    cellClassName: 'text-center',
     render: (i) => <SeverityIndicator priority={i.priority} />,
   },
   {
     key: 'status',
     header: 'Estado',
+    headerClassName: 'text-center',
+    cellClassName: 'text-center',
     render: (i) => <StatusBadge status={i.status} />,
   },
   {
@@ -178,7 +182,7 @@ export default function PropertyDetailPage() {
   if (propertyError) {
     return (
       <div>
-        <Link href="/properties" className="mb-4 inline-flex items-center gap-1 text-sm text-brand-500 transition-colors hover:text-brand-700">
+        <Link href="/properties" className="mb-4 inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-text-secondary">
           &larr; Propiedades
         </Link>
         <ErrorBanner message="Error al cargar los detalles de la propiedad." onRetry={() => router.refresh()} />
@@ -193,29 +197,29 @@ export default function PropertyDetailPage() {
       {/* ── Breadcrumb ───────────────────────────────────── */}
       <Link
         href="/properties"
-        className="inline-flex items-center gap-1 text-sm text-brand-500 transition-colors hover:text-brand-700"
+        className="inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-text-secondary"
       >
         &larr; Propiedades
       </Link>
 
       {/* ── Property Header ──────────────────────────────── */}
       {propertyLoading ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <Skeleton rows={3} className="h-5 w-72" />
         </div>
       ) : property ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-2xl font-semibold text-brand-950">
+                <h1 className="font-display text-2xl font-semibold text-text-primary">
                   {property.name}
                 </h1>
                 <span
                   className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
                     property.is_active
-                      ? 'bg-status-success-light text-status-success-dark'
-                      : 'bg-brand-100 text-brand-600'
+                      ? 'bg-badge-resolved-bg text-badge-resolved-text'
+                      : 'bg-indigo-subtle text-text-secondary'
                   }`}
                 >
                   {property.is_active ? 'Activa' : 'Inactiva'}
@@ -223,7 +227,7 @@ export default function PropertyDetailPage() {
               </div>
 
               {/* Metadata chips */}
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-brand-500">
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-text-muted">
                 {property.address && (
                   <span className="inline-flex items-center gap-1">
                     <MapPinIcon />
@@ -231,7 +235,7 @@ export default function PropertyDetailPage() {
                   </span>
                 )}
                 {meta?.type && (
-                  <span className="inline-flex items-center gap-1 rounded-pill bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+                  <span className="inline-flex items-center gap-1 rounded-pill bg-indigo-subtle px-2.5 py-0.5 text-xs font-medium text-text-secondary">
                     {meta.type}
                   </span>
                 )}
@@ -247,13 +251,13 @@ export default function PropertyDetailPage() {
 
           {/* Current guest banner */}
           {property.current_guest && (
-            <div className="mt-4 flex items-center gap-3 rounded-card bg-status-success-light px-4 py-3">
-              <UserIcon className="h-5 w-5 text-status-success-dark" />
+            <div className="mt-4 flex items-center gap-3 rounded-card bg-badge-resolved-bg px-4 py-3">
+              <UserIcon className="h-5 w-5 text-badge-resolved-text" />
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-status-success-dark">
+                <p className="text-xs font-medium uppercase tracking-wider text-badge-resolved-text">
                   Huésped actual
                 </p>
-                <p className="text-sm font-semibold text-status-success-dark">
+                <p className="text-sm font-semibold text-badge-resolved-text">
                   {property.current_guest}
                 </p>
               </div>
@@ -266,7 +270,7 @@ export default function PropertyDetailPage() {
       {propertyLoading ? (
         <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-card border border-brand-200 bg-white p-5 shadow-card">
+            <div key={i} className="rounded-card border border-card-border bg-white p-5 shadow-card">
               <Skeleton rows={2} className="h-4 w-20" />
             </div>
           ))}
@@ -274,95 +278,107 @@ export default function PropertyDetailPage() {
       ) : property ? (
         <div className="grid grid-cols-4 gap-4">
           {/* Reservas próximas */}
-          <div className="rounded-card border border-brand-200 bg-white p-5 shadow-card">
+          <Link
+            href={`/properties/${propertyId}/reservations`}
+            className="rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
+          >
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-card bg-status-info-light">
-                <CalendarIcon className="h-5 w-5 text-status-info-dark" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-card bg-indigo-subtle">
+                <CalendarIcon className="h-5 w-5 text-indigo-300" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-brand-950">
+                <p className="text-2xl font-semibold text-indigo-300">
                   {property.upcoming_reservations}
                 </p>
-                <p className="text-xs text-brand-500">Reservas próximas</p>
+                <p className="text-xs text-text-muted">Reservas próximas</p>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Incidentes activos */}
-          <div className="rounded-card border border-brand-200 bg-white p-5 shadow-card">
+          <Link
+            href="/incidents"
+            className="rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
+          >
             <div className="flex items-center gap-3">
               <div className={`flex h-10 w-10 items-center justify-center rounded-card ${
-                property.active_incidents > 0 ? 'bg-status-danger-light' : 'bg-brand-100'
+                property.active_incidents > 0 ? 'bg-badge-danger-bg' : 'bg-indigo-subtle'
               }`}>
                 <ExclamationIcon className={`h-5 w-5 ${
-                  property.active_incidents > 0 ? 'text-status-danger-dark' : 'text-brand-400'
+                  property.active_incidents > 0 ? 'text-badge-danger-text' : 'text-text-muted'
                 }`} />
               </div>
               <div>
                 <p className={`text-2xl font-semibold ${
-                  property.active_incidents > 0 ? 'text-status-danger-dark' : 'text-brand-950'
+                  property.active_incidents > 0 ? 'text-badge-danger-text' : 'text-text-primary'
                 }`}>
                   {property.active_incidents}
                 </p>
-                <p className="text-xs text-brand-500">Incidentes activos</p>
+                <p className="text-xs text-text-muted">Incidentes activos</p>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Ítems en lavandería */}
-          <div className="rounded-card border border-brand-200 bg-white p-5 shadow-card">
+          <Link
+            href={`/properties/${propertyId}/laundry`}
+            className="rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
+          >
             <div className="flex items-center gap-3">
               <div className={`flex h-10 w-10 items-center justify-center rounded-card ${
-                property.items_in_laundry > 0 ? 'bg-status-info-light' : 'bg-brand-100'
+                property.items_in_laundry > 0 ? 'bg-badge-progress-bg' : 'bg-indigo-subtle'
               }`}>
                 <ShirtIcon className={`h-5 w-5 ${
-                  property.items_in_laundry > 0 ? 'text-status-info-dark' : 'text-brand-400'
+                  property.items_in_laundry > 0 ? 'text-badge-progress-text' : 'text-text-muted'
                 }`} />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-brand-950">
+                <p className="text-2xl font-semibold text-text-primary">
                   {property.items_in_laundry}
                 </p>
-                <p className="text-xs text-brand-500">Ítems en lavandería</p>
+                <p className="text-xs text-text-muted">Ítems en lavandería</p>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Alertas de stock */}
-          <div className="rounded-card border border-brand-200 bg-white p-5 shadow-card">
+          <Link
+            href={`/properties/${propertyId}/inventory`}
+            className="rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
+          >
             <div className="flex items-center gap-3">
               <div className={`flex h-10 w-10 items-center justify-center rounded-card ${
-                property.low_stock_alerts > 0 ? 'bg-status-warning-light' : 'bg-brand-100'
+                property.low_stock_alerts > 0 ? 'bg-teal-subtle' : 'bg-indigo-subtle'
               }`}>
                 <AlertIcon className={`h-5 w-5 ${
-                  property.low_stock_alerts > 0 ? 'text-status-warning-dark' : 'text-brand-400'
+                  property.low_stock_alerts > 0 ? 'text-teal-600' : 'text-text-muted'
                 }`} />
               </div>
               <div>
                 <p className={`text-2xl font-semibold ${
-                  property.low_stock_alerts > 0 ? 'text-status-warning-dark' : 'text-brand-950'
+                  property.low_stock_alerts > 0 ? 'text-teal-600' : 'text-text-primary'
                 }`}>
                   {property.low_stock_alerts}
                 </p>
-                <p className="text-xs text-brand-500">Alertas de stock</p>
+                <p className="text-xs text-text-muted">Alertas de stock</p>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       ) : null}
 
       {/* ── Equipo (Staff) ──────────────────────────────── */}
       {staffLoading ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <Skeleton rows={3} className="h-4 w-48" />
         </div>
       ) : (propertyManager || property) ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-card bg-brand-100">
-              <UsersIcon className="h-4 w-4 text-brand-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-card bg-indigo-subtle">
+              <UsersIcon className="h-4 w-4 text-text-secondary" />
             </div>
-            <h2 className="font-display text-lg font-semibold text-brand-950">
+            <h2 className="font-display text-lg font-semibold text-text-primary">
               Equipo
             </h2>
           </div>
@@ -370,21 +386,21 @@ export default function PropertyDetailPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {/* Property Manager */}
             {propertyManager && (
-              <div className="rounded-card border border-brand-200 bg-brand-50/50 p-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-brand-500">
+              <div className="rounded-card border border-card-border bg-slate-50 p-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-text-muted">
                   Property Manager
                 </p>
-                <p className="font-medium text-brand-950">
+                <p className="font-medium text-text-primary">
                   {propertyManager.first_name} {propertyManager.last_name}
                 </p>
                 <div className="mt-2 space-y-1">
                   {propertyManager.phone && (
-                    <p className="flex items-center gap-1.5 text-sm text-brand-600">
+                    <p className="flex items-center gap-1.5 text-sm text-text-secondary">
                       <PhoneIcon className="h-3.5 w-3.5" />
                       {propertyManager.phone}
                     </p>
                   )}
-                  <p className="flex items-center gap-1.5 text-sm text-brand-600">
+                  <p className="flex items-center gap-1.5 text-sm text-text-secondary">
                     <EnvelopeIcon className="h-3.5 w-3.5" />
                     {propertyManager.email}
                   </p>
@@ -394,14 +410,14 @@ export default function PropertyDetailPage() {
 
             {/* Housekeepers needed chip */}
             {property && (
-              <div className="rounded-card border border-brand-200 bg-brand-50/50 p-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-brand-500">
+              <div className="rounded-card border border-card-border bg-slate-50 p-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-text-muted">
                   Housekeeping
                 </p>
-                <span className="inline-flex items-center rounded-pill bg-status-info-light px-3 py-1 text-sm font-medium text-status-info-dark">
+                <span className="inline-flex items-center rounded-pill bg-badge-progress-bg px-3 py-1 text-sm font-medium text-badge-progress-text">
                   {property.housekeepers_needed} housekeeper{property.housekeepers_needed !== 1 ? 's' : ''} necesaria{property.housekeepers_needed !== 1 ? 's' : ''}
                 </span>
-                <p className="mt-2 text-xs text-brand-500">
+                <p className="mt-2 text-xs text-text-muted">
                   Se asignan del pool por disponibilidad
                 </p>
               </div>
@@ -411,12 +427,12 @@ export default function PropertyDetailPage() {
       ) : null}
 
       {/* ── Turnos de Housekeeping ───────────────────────── */}
-      <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+      <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-status-info-light">
-            <CalendarIcon className="h-4 w-4 text-status-info-dark" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-badge-progress-bg">
+            <CalendarIcon className="h-4 w-4 text-badge-progress-text" />
           </div>
-          <h2 className="font-display text-lg font-semibold text-brand-950">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Turnos de Housekeeping
           </h2>
         </div>
@@ -427,7 +443,7 @@ export default function PropertyDetailPage() {
         />
         {hkLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-300 border-t-brand-950" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-card-border border-t-indigo-700" />
           </div>
         ) : (
           <ShiftGrid mode="property" assignments={hkAssignments || []} currentMonth={hkMonth} />
@@ -435,18 +451,18 @@ export default function PropertyDetailPage() {
       </div>
 
       {/* ── Reportes de Condición ────────────────────────── */}
-      <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+      <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-brand-100">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-brand-700">
+          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-indigo-subtle">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-text-secondary">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
             </svg>
           </div>
-          <h2 className="font-display text-lg font-semibold text-brand-950">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Reportes de Condición
           </h2>
           {conditionReports && conditionReports.length > 0 && (
-            <span className="inline-flex items-center rounded-pill bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+            <span className="inline-flex items-center rounded-pill bg-indigo-subtle px-2.5 py-0.5 text-xs font-medium text-text-secondary">
               {conditionReports.length}
             </span>
           )}
@@ -454,16 +470,16 @@ export default function PropertyDetailPage() {
 
         {crLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-300 border-t-brand-950" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-card-border border-t-indigo-700" />
           </div>
         ) : conditionReports && conditionReports.length > 0 ? (
           <div className="space-y-3">
             {conditionReports.slice(0, 5).map((cr) => {
               const conditionStyles: Record<string, string> = {
-                excellent: 'bg-status-success-light text-status-success-dark',
-                good: 'bg-status-info-light text-status-info-dark',
-                fair: 'bg-status-warning-light text-status-warning-dark',
-                poor: 'bg-status-danger-light text-status-danger-dark',
+                excellent: 'bg-badge-resolved-bg text-badge-resolved-text',
+                good: 'bg-badge-progress-bg text-badge-progress-text',
+                fair: 'bg-teal-subtle text-teal-600',
+                poor: 'bg-badge-danger-bg text-badge-danger-text',
               };
               const conditionLabels: Record<string, string> = {
                 excellent: 'Excelente',
@@ -475,28 +491,28 @@ export default function PropertyDetailPage() {
                 <Link
                   key={cr.id}
                   href={`/condition-reports/${cr.id}`}
-                  className="flex items-center justify-between rounded-card border border-brand-200 bg-brand-50/50 p-4 transition-all hover:border-brand-400 hover:shadow-card-hover"
+                  className="flex items-center justify-between rounded-card border border-card-border bg-slate-50 p-4 transition-all hover:border-indigo-300 hover:shadow-card-hover"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-brand-950">
+                      <span className="text-sm font-medium text-text-primary">
                         {new Date(cr.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
-                      <span className={`inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium ${conditionStyles[cr.general_condition] || 'bg-brand-100 text-brand-700'}`}>
+                      <span className={`inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium ${conditionStyles[cr.general_condition] || 'bg-indigo-subtle text-text-secondary'}`}>
                         {conditionLabels[cr.general_condition] || cr.general_condition}
                       </span>
                       {cr.events_created > 0 && (
-                        <span className="inline-flex items-center rounded-pill bg-status-danger-light px-2 py-0.5 text-xs font-medium text-status-danger-dark">
+                        <span className="inline-flex items-center rounded-pill bg-badge-danger-bg px-2 py-0.5 text-xs font-medium text-badge-danger-text">
                           {cr.events_created} evento{cr.events_created !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
                     {cr.staff_name && (
-                      <p className="mt-1 text-xs text-brand-500">Por: {cr.staff_name}</p>
+                      <p className="mt-1 text-xs text-text-muted">Por: {cr.staff_name}</p>
                     )}
-                    <p className="mt-1 line-clamp-1 text-xs text-brand-500">{cr.summary}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-text-muted">{cr.summary}</p>
                   </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 text-brand-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 text-text-muted">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>
                 </Link>
@@ -504,7 +520,7 @@ export default function PropertyDetailPage() {
             })}
           </div>
         ) : (
-          <p className="py-4 text-center text-sm text-brand-400">
+          <p className="py-4 text-center text-sm text-text-muted">
             Sin reportes de condición
           </p>
         )}
@@ -514,42 +530,42 @@ export default function PropertyDetailPage() {
       <div className="grid grid-cols-3 gap-4">
         <Link
           href={`/properties/${propertyId}/reservations`}
-          className="group flex items-center gap-4 rounded-card border border-brand-200 bg-white p-5 shadow-card transition-all hover:border-brand-400 hover:shadow-card-hover"
+          className="group flex items-center gap-4 rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
         >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-brand-950 transition-transform group-hover:scale-105">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-slate-900 transition-transform group-hover:scale-105">
             <CalendarIcon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-sm font-semibold text-brand-950">Calendario</p>
-            <p className="mt-0.5 text-xs text-brand-500">Reservas y disponibilidad</p>
+            <p className="font-display text-sm font-semibold text-text-primary">Calendario</p>
+            <p className="mt-0.5 text-xs text-text-muted">Reservas y disponibilidad</p>
           </div>
           <ChevronRightIcon />
         </Link>
 
         <Link
           href={`/properties/${propertyId}/inventory`}
-          className="group flex items-center gap-4 rounded-card border border-brand-200 bg-white p-5 shadow-card transition-all hover:border-brand-400 hover:shadow-card-hover"
+          className="group flex items-center gap-4 rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
         >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-brand-950 transition-transform group-hover:scale-105">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-slate-900 transition-transform group-hover:scale-105">
             <BoxIcon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-sm font-semibold text-brand-950">Inventario</p>
-            <p className="mt-0.5 text-xs text-brand-500">Stock y alertas de ítems</p>
+            <p className="font-display text-sm font-semibold text-text-primary">Inventario</p>
+            <p className="mt-0.5 text-xs text-text-muted">Stock y alertas de ítems</p>
           </div>
           <ChevronRightIcon />
         </Link>
 
         <Link
           href={`/properties/${propertyId}/laundry`}
-          className="group flex items-center gap-4 rounded-card border border-brand-200 bg-white p-5 shadow-card transition-all hover:border-brand-400 hover:shadow-card-hover"
+          className="group flex items-center gap-4 rounded-card border border-card-border bg-white p-5 shadow-card transition-all hover:border-indigo-300 hover:shadow-card-hover"
         >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-brand-950 transition-transform group-hover:scale-105">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-slate-900 transition-transform group-hover:scale-105">
             <ShirtIcon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-sm font-semibold text-brand-950">Lavandería</p>
-            <p className="mt-0.5 text-xs text-brand-500">Flujos y devoluciones</p>
+            <p className="font-display text-sm font-semibold text-text-primary">Lavandería</p>
+            <p className="mt-0.5 text-xs text-text-muted">Flujos y devoluciones</p>
           </div>
           <ChevronRightIcon />
         </Link>
@@ -560,11 +576,11 @@ export default function PropertyDetailPage() {
         {/* Incidentes — wider */}
         <div className="col-span-3">
           <div className="mb-3 flex items-center gap-2">
-            <h2 className="font-display text-lg font-semibold text-brand-950">
+            <h2 className="font-display text-lg font-semibold text-text-primary">
               Incidentes Activos
             </h2>
             {incidents && incidents.length > 0 && (
-              <span className="inline-flex items-center rounded-pill bg-status-danger-light px-2.5 py-0.5 text-xs font-medium text-status-danger-dark">
+              <span className="inline-flex items-center rounded-pill bg-badge-danger-bg px-2.5 py-0.5 text-xs font-medium text-badge-danger-text">
                 {incidents.length}
               </span>
             )}
@@ -582,11 +598,11 @@ export default function PropertyDetailPage() {
 
         {/* Eventos recientes — narrower */}
         <div className="col-span-2">
-          <h2 className="mb-3 font-display text-lg font-semibold text-brand-950">
+          <h2 className="mb-3 font-display text-lg font-semibold text-text-primary">
             Eventos Recientes
           </h2>
           {eventsLoading ? (
-            <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+            <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
               <Skeleton rows={5} className="h-8 w-full" />
             </div>
           ) : (

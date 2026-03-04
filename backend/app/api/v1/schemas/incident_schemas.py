@@ -46,6 +46,16 @@ class IncidentResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class IncidentCreate(BaseModel):
+    """Payload for creating a new incident."""
+
+    property_id: UUID
+    incident_type: str = Field(..., min_length=1, max_length=100)
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(default="", max_length=2000)
+    priority: IncidentPriorityEnum = IncidentPriorityEnum.MEDIUM
+
+
 class IncidentStatusUpdate(BaseModel):
     """Payload for updating an incident's status."""
 

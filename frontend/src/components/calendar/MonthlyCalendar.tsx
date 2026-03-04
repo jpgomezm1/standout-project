@@ -45,13 +45,13 @@ export default function MonthlyCalendar({
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-200 bg-white shadow-card">
+    <div className="overflow-hidden rounded-card border border-card-border bg-white shadow-card">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-brand-200 bg-brand-50">
+      <div className="grid grid-cols-7 border-b border-card-border bg-slate-50">
         {WEEKDAYS.map((day) => (
           <div
             key={day}
-            className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-brand-500"
+            className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-muted"
           >
             {day}
           </div>
@@ -68,11 +68,11 @@ export default function MonthlyCalendar({
           return (
             <div
               key={day.toISOString()}
-              className={`min-h-[80px] border-b border-r border-brand-100 p-1 ${
-                !inMonth ? 'bg-brand-50 opacity-50' : ''
-              } ${today ? 'ring-2 ring-inset ring-brand-500' : ''}`}
+              className={`min-h-[80px] border-b border-r border-card-border p-1 ${
+                !inMonth ? 'bg-slate-50 opacity-50' : ''
+              } ${today ? 'ring-2 ring-inset ring-indigo-700' : ''}`}
             >
-              <div className="mb-1 text-right text-xs font-medium text-brand-600">
+              <div className="mb-1 text-right text-xs font-medium text-text-secondary">
                 {format(day, 'd')}
               </div>
               <div className="flex flex-col gap-0.5">
@@ -90,7 +90,7 @@ export default function MonthlyCalendar({
                   </button>
                 ))}
                 {dayReservations.length > 3 && (
-                  <span className="text-[10px] text-brand-500">
+                  <span className="text-[10px] text-text-muted">
                     +{dayReservations.length - 3} más
                   </span>
                 )}

@@ -6,17 +6,61 @@
 
 @layer base {
   body {
-    @apply bg-brand-50 text-brand-950 antialiased font-sans;
+    background-color: #F1F5F9;
+    color: #0F172A;
+    @apply antialiased font-sans;
   }
 
   ::selection {
-    @apply bg-brand-300/40;
+    background: rgba(59, 79, 224, 0.15);
   }
 }
 
 @layer components {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #d4c8ba transparent;
+    scrollbar-color: #E2E8F0 transparent;
   }
+}
+
+/* Page content fade-in */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out both;
+}
+
+.animate-fade-up-delay-1 {
+  animation: fadeUp 0.4s ease-out 0.08s both;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fadeUp 0.4s ease-out 0.16s both;
+}
+
+.animate-fade-up-delay-3 {
+  animation: fadeUp 0.4s ease-out 0.24s both;
+}
+
+.animate-fade-up-delay-4 {
+  animation: fadeUp 0.4s ease-out 0.32s both;
+}
+
+/* Card lift on hover */
+.card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
 }

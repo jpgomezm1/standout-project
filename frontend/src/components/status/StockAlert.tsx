@@ -9,7 +9,7 @@ export default function StockAlert({
 }: StockAlertProps) {
   if (currentQuantity >= lowStockThreshold) {
     return (
-      <span className="inline-flex items-center rounded-pill bg-status-success-light px-3 py-0.5 text-xs font-medium text-status-success-dark">
+      <span className="inline-flex items-center rounded-pill bg-badge-resolved-bg px-3 py-0.5 text-xs font-medium text-badge-resolved-text">
         Normal
       </span>
     );
@@ -21,8 +21,8 @@ export default function StockAlert({
     <span
       className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
         isCritical
-          ? 'bg-status-danger-light text-status-danger-dark'
-          : 'bg-status-warning-light text-status-warning-dark'
+          ? 'bg-badge-danger-bg text-badge-danger-text'
+          : 'bg-teal-subtle text-teal-600'
       }`}
     >
       {isCritical ? 'Crítico' : 'Bajo'}

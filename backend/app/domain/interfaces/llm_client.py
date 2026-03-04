@@ -29,3 +29,8 @@ class ILLMClient(ABC):
         extracted parameters.
         """
         ...
+
+    @abstractmethod
+    async def analyze_image(self, image_data: bytes, prompt: str) -> str:
+        """Analyze an image and return a free-form text description."""
+        ...

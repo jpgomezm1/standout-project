@@ -5,7 +5,7 @@ interface SeverityIndicatorProps {
 }
 
 export default function SeverityIndicator({ priority }: SeverityIndicatorProps) {
-  const colorClasses = PRIORITY_COLORS[priority] || 'bg-brand-100 text-brand-700';
+  const colorClasses = PRIORITY_COLORS[priority] || 'bg-indigo-subtle text-indigo-700';
   const displayLabel = PRIORITY_LABELS[priority] || priority;
 
   return (

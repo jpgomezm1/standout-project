@@ -42,6 +42,18 @@ class StaffCreate(BaseModel):
     property_id: UUID | None = None
 
 
+class StaffUpdate(BaseModel):
+    """Payload for updating an existing staff member."""
+
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    email: str | None = Field(default=None, max_length=255)
+    phone: str | None = None
+    role: StaffRoleEnum | None = None
+    is_active: bool | None = None
+    property_id: UUID | None = None
+
+
 class HousekeepingAssignmentResponse(BaseModel):
     """Housekeeping assignment representation."""
 

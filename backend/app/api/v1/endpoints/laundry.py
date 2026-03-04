@@ -7,7 +7,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.api.v1.schemas.laundry_schemas import LaundryFlowResponse, LaundryStatusEnum
+from datetime import datetime, timezone
+
+from app.api.v1.schemas.laundry_schemas import LaundryFlowResponse, LaundryStatusEnum, LaundryStatusUpdate
 from app.dependencies import DbSessionDep
 from app.domain.entities.laundry import LaundryStatus
 from app.infrastructure.db.repositories.laundry_repository import LaundryRepository
@@ -95,3 +97,34 @@ async def get_laundry_flow(
         )
 
     return _flow_to_response(flow)
+
+
+@router.patch("/{flow_id}", response_model=LaundryFlowResponse)
+async def update_laundry_status(
+    property_id: UUID,
+    flow_id: UUID,
+    body: LaundryStatusUpdate,
+    db: DbSessionDep,
+) -> LaundryFlowResponse:
+    """Manually update a laundry flow status (e.g. mark as returned)."""
+    repo = LaundryRepository(db)
+    flow = await repo.get_by_id(flow_id)
+    if flow is None:
+        raise HTTPException(status_code=404, detail="Laundry flow not found")
+    if flow.property_id != property_id:
+        raise HTTPException(status_code=404, detail="Laundry flow not found for this property")
+
+    new_status = LaundryStatus(body.status.value.upper())
+    now = datetime.now(timezone.utc)
+
+    update_fields: dict = {"status": new_status, "updated_at": now}
+    if new_status == LaundryStatus.RETURNED:
+        update_fields["returned_at"] = now
+    elif new_status == LaundryStatus.SENT:
+        update_fields["returned_at"] = None
+
+    updated_flow = flow.model_copy(update=update_fields)
+    stored = await repo.update(updated_flow)
+    await db.commit()
+
+    return _flow_to_response(stored)

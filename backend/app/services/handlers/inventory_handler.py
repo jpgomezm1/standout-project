@@ -26,6 +26,7 @@ HANDLED_EVENT_TYPES: frozenset[EventType] = frozenset(
     {
         EventType.ITEM_BROKEN,
         EventType.ITEM_MISSING,
+        EventType.ITEM_REPLACED,
         EventType.LOW_STOCK_ALERT,
     }
 )
@@ -49,7 +50,7 @@ class InventoryHandler(AbstractEventHandler):
         self._repo_factory = repo_factory
 
     async def handle(self, event: OperationalEvent) -> None:
-        if event.event_type in (EventType.ITEM_BROKEN, EventType.ITEM_MISSING):
+        if event.event_type in (EventType.ITEM_BROKEN, EventType.ITEM_MISSING, EventType.ITEM_REPLACED):
             await self._validate_item(event)
         elif event.event_type == EventType.LOW_STOCK_ALERT:
             await self._handle_low_stock_alert(event)

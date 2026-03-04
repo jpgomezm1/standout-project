@@ -4,18 +4,19 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query
 
 from app.api.v1.schemas.incident_schemas import (
+    IncidentCreate,
     IncidentPriorityEnum,
     IncidentResponse,
     IncidentStatusEnum,
     IncidentStatusUpdate,
 )
 from app.dependencies import DbSessionDep
-from app.domain.entities.incident import IncidentPriority, IncidentStatus
+from app.domain.entities.incident import Incident, IncidentPriority, IncidentStatus
 from app.infrastructure.db.repositories.incident_repository import IncidentRepository
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,31 @@ async def get_incident(
         raise HTTPException(status_code=404, detail="Incident not found")
 
     return _incident_to_response(incident)
+
+
+@router.post("", response_model=IncidentResponse, status_code=201)
+async def create_incident(
+    data: IncidentCreate,
+    db: DbSessionDep,
+) -> IncidentResponse:
+    """Create a new incident manually."""
+    repo = IncidentRepository(db)
+
+    now = datetime.now(timezone.utc)
+    new_incident = Incident(
+        id=uuid4(),
+        property_id=data.property_id,
+        incident_type=data.incident_type,
+        title=data.title,
+        description=data.description,
+        status=IncidentStatus.OPEN,
+        priority=IncidentPriority(data.priority.value.upper()),
+        created_at=now,
+        updated_at=now,
+    )
+
+    created = await repo.create(new_incident)
+    return _incident_to_response(created)
 
 
 @router.patch("/{incident_id}", response_model=IncidentResponse)

@@ -125,6 +125,13 @@ class InventoryRepository(IInventoryRepository):
                             Integer,
                         ),
                     ),
+                    (
+                        EventModel.event_type == "ITEM_REPLACED",
+                        func.cast(
+                            EventModel.payload["quantity"].astext,
+                            Integer,
+                        ),
+                    ),
                 )
             ),
             0,
@@ -151,6 +158,7 @@ class InventoryRepository(IInventoryRepository):
                             "ITEM_MISSING",
                             "ITEM_SENT_TO_LAUNDRY",
                             "ITEM_RETURNED_FROM_LAUNDRY",
+                            "ITEM_REPLACED",
                         ]
                     )
                 ),

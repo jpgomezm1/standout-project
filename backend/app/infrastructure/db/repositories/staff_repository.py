@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from datetime import datetime, timezone
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.staff import StaffMember, StaffRole
@@ -110,6 +112,41 @@ class StaffRepository(IStaffRepository):
             self._session.add(assignment)
             await self._session.flush()
 
+        await self._session.refresh(model)
+        return self._to_domain(model)
+
+    async def update(
+        self,
+        staff_id: UUID,
+        updates: dict,
+        property_id: UUID | None = ...,
+    ) -> StaffMember | None:
+        model = await self._session.get(StaffMemberModel, staff_id)
+        if model is None:
+            return None
+
+        for key, value in updates.items():
+            setattr(model, key, value)
+        model.updated_at = datetime.now(timezone.utc)
+
+        # Update property assignment if explicitly provided (not the sentinel)
+        if property_id is not ...:
+            # Remove existing assignments
+            await self._session.execute(
+                delete(PropertyStaffAssignmentModel).where(
+                    PropertyStaffAssignmentModel.staff_id == staff_id,
+                )
+            )
+            # Add new assignment if provided
+            if property_id is not None:
+                self._session.add(
+                    PropertyStaffAssignmentModel(
+                        property_id=property_id,
+                        staff_id=staff_id,
+                    )
+                )
+
+        await self._session.flush()
         await self._session.refresh(model)
         return self._to_domain(model)
 

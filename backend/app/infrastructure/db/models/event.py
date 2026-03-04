@@ -31,7 +31,7 @@ class EventModel(UUIDPrimaryKeyMixin, Base):
     __table_args__ = (
         CheckConstraint(
             "event_type IN ("
-            "'ITEM_BROKEN', 'ITEM_MISSING', "
+            "'ITEM_BROKEN', 'ITEM_MISSING', 'ITEM_REPLACED', "
             "'ITEM_SENT_TO_LAUNDRY', 'ITEM_RETURNED_FROM_LAUNDRY', "
             "'MAINTENANCE_ISSUE', 'LOW_STOCK_ALERT', "
             "'INCIDENT_ACKNOWLEDGED', 'INCIDENT_IN_PROGRESS', 'INCIDENT_RESOLVED', "

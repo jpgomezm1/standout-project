@@ -37,6 +37,13 @@ _EVENT_INCIDENT_TYPE_MAP: dict[EventType, str] = {
     EventType.MAINTENANCE_ISSUE: "maintenance",
 }
 
+# Human-readable title prefixes per event type.
+_EVENT_TITLE_MAP: dict[EventType, str] = {
+    EventType.ITEM_BROKEN: "Ítem roto",
+    EventType.ITEM_MISSING: "Ítem faltante",
+    EventType.MAINTENANCE_ISSUE: "Problema de mantenimiento",
+}
+
 # Maps status-transition event types to the target ``IncidentStatus``.
 _STATUS_TRANSITION_MAP: dict[EventType, IncidentStatus] = {
     EventType.INCIDENT_ACKNOWLEDGED: IncidentStatus.ACKNOWLEDGED,
@@ -88,11 +95,33 @@ class IncidentHandler(AbstractEventHandler):
         else:
             priority = _EVENT_PRIORITY_MAP[event.event_type]
 
+        # Build a human-readable title from the payload
+        default_prefix = _EVENT_TITLE_MAP.get(event.event_type, event.event_type.value)
+        item_name = payload.get("item_name", "")
+        property_name = payload.get("property_name", "")
+        quantity = payload.get("quantity", "")
+
+        if item_name and property_name:
+            qty_int = int(quantity) if quantity else 1
+            if qty_int > 1:
+                # Simple Spanish pluralization
+                if item_name.endswith(("a", "e", "i", "o", "u")):
+                    plural_name = item_name + "s"
+                else:
+                    plural_name = item_name + "es"
+                default_title = f"{default_prefix}: {qty_int} {plural_name} en {property_name}"
+            else:
+                default_title = f"{default_prefix}: {item_name} en {property_name}"
+        elif property_name:
+            default_title = f"{default_prefix} en {property_name}"
+        else:
+            default_title = default_prefix
+
         incident = Incident(
             id=uuid4(),
             property_id=event.property_id,
             incident_type=_EVENT_INCIDENT_TYPE_MAP[event.event_type],
-            title=payload.get("title", f"{event.event_type.value} at property"),
+            title=payload.get("title", default_title),
             description=payload.get("description", ""),
             status=IncidentStatus.OPEN,
             priority=priority,
@@ -115,24 +144,15 @@ class IncidentHandler(AbstractEventHandler):
         )
 
     async def _update_incident_status(self, event: OperationalEvent) -> None:
-        """Transition an existing incident to a new status."""
-        incident_id_raw = event.payload.get("incident_id")
-        if not incident_id_raw:
-            logger.error(
-                "Status-transition event %s is missing 'incident_id' in payload",
-                event.id,
-            )
-            return
+        """Transition an existing incident to a new status.
 
-        try:
-            incident_id = UUID(str(incident_id_raw))
-        except ValueError:
-            logger.error(
-                "Invalid incident_id '%s' in event %s payload",
-                incident_id_raw,
-                event.id,
-            )
-            return
+        If ``incident_id`` is present in the payload it is used directly.
+        Otherwise the handler looks up the most recent open incident for the
+        property, optionally matching by item name — this covers the common
+        Telegram-driven scenario where the user says "ya repusieron el plato
+        del Penthouse".
+        """
+        incident_id_raw = event.payload.get("incident_id")
 
         new_status = _STATUS_TRANSITION_MAP[event.event_type]
         resolved_at = (
@@ -143,22 +163,59 @@ class IncidentHandler(AbstractEventHandler):
 
         async with self._session_factory() as session:
             repo = self._repo_factory(session)
-            updated = await repo.update_status(
-                incident_id, new_status, resolved_at=resolved_at
-            )
+
+            if incident_id_raw:
+                try:
+                    incident_id = UUID(str(incident_id_raw))
+                except ValueError:
+                    logger.error(
+                        "Invalid incident_id '%s' in event %s payload",
+                        incident_id_raw,
+                        event.id,
+                    )
+                    return
+
+                updated = await repo.update_status(
+                    incident_id, new_status, resolved_at=resolved_at
+                )
+            else:
+                # Fallback: find the most recent open incident for this property
+                item_name = event.payload.get("item_name")
+                incident = await repo.get_latest_open_by_property(
+                    event.property_id, item_name=item_name
+                )
+                if incident is None:
+                    logger.warning(
+                        "No matching open incident for property %s (item=%s) "
+                        "from event %s",
+                        event.property_id,
+                        item_name,
+                        event.id,
+                    )
+                    return
+
+                logger.info(
+                    "No incident_id in event %s; matched open incident %s ('%s')",
+                    event.id,
+                    incident.id,
+                    incident.title,
+                )
+                updated = await repo.update_status(
+                    incident.id, new_status, resolved_at=resolved_at
+                )
+
             await session.commit()
 
         if updated is None:
             logger.warning(
-                "Incident %s not found when processing event %s",
-                incident_id,
+                "Incident not found when processing event %s",
                 event.id,
             )
             return
 
         logger.info(
             "Updated incident %s to status '%s' from event %s",
-            incident_id,
+            updated.id,
             new_status.value,
             event.id,
         )

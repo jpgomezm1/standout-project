@@ -10,93 +10,10 @@ import CalendarHeader from '@/components/calendar/CalendarHeader';
 import ShiftGrid from '@/components/housekeeping/ShiftGrid';
 import ErrorBanner from '@/components/shared/ErrorBanner';
 import { TableSkeleton } from '@/components/shared/Skeleton';
+import { useToast } from '@/components/shared/Toast';
+import StaffFormModal from '@/components/staff/StaffFormModal';
+import type { StaffFormData } from '@/components/staff/StaffFormModal';
 import type { StaffMember } from '@/types/staff';
-
-/* -- columns for Property Managers ------------------------------------ */
-
-const pmColumns: Column<StaffMember>[] = [
-  {
-    key: 'name',
-    header: 'Nombre',
-    render: (s) => (
-      <span className="font-medium text-brand-950">
-        {s.first_name} {s.last_name}
-      </span>
-    ),
-  },
-  {
-    key: 'email',
-    header: 'Email',
-    render: (s) => (
-      <span className="text-sm text-brand-600">{s.email}</span>
-    ),
-  },
-  {
-    key: 'phone',
-    header: 'Teléfono',
-    render: (s) => (
-      <span className="text-sm text-brand-600">{s.phone || '—'}</span>
-    ),
-  },
-  {
-    key: 'is_active',
-    header: 'Estado',
-    render: (s) => (
-      <span
-        className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
-          s.is_active
-            ? 'bg-status-success-light text-status-success-dark'
-            : 'bg-brand-100 text-brand-600'
-        }`}
-      >
-        {s.is_active ? 'Activo' : 'Inactivo'}
-      </span>
-    ),
-  },
-];
-
-/* -- columns for Housekeepers ----------------------------------------- */
-
-const hkColumns: Column<StaffMember>[] = [
-  {
-    key: 'name',
-    header: 'Nombre',
-    render: (s) => (
-      <span className="font-medium text-brand-950">
-        {s.first_name} {s.last_name}
-      </span>
-    ),
-  },
-  {
-    key: 'email',
-    header: 'Email',
-    render: (s) => (
-      <span className="text-sm text-brand-600">{s.email}</span>
-    ),
-  },
-  {
-    key: 'phone',
-    header: 'Teléfono',
-    render: (s) => (
-      <span className="text-sm text-brand-600">{s.phone || '—'}</span>
-    ),
-  },
-  {
-    key: 'is_active',
-    header: 'Estado',
-    render: (s) => (
-      <span
-        className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
-          s.is_active
-            ? 'bg-status-success-light text-status-success-dark'
-            : 'bg-brand-100 text-brand-600'
-        }`}
-      >
-        {s.is_active ? 'Activo' : 'Inactivo'}
-      </span>
-    ),
-  },
-];
 
 /* -- SVG Icons -------------------------------------------------------- */
 
@@ -116,22 +33,190 @@ function CalendarIcon({ className = 'h-5 w-5' }: { className?: string }) {
   );
 }
 
+function PencilIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+    </svg>
+  );
+}
+
+function PlusIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+  );
+}
+
 /* -- page ------------------------------------------------------------- */
 
 export default function StaffPage() {
   const router = useRouter();
-  const { data: staff, isLoading, error, mutate } = useStaff();
+  const { toast } = useToast();
+  const { data: staff, isLoading, error, mutate, createStaff, updateStaff } = useStaff();
   const [globalMonth, setGlobalMonth] = useState(() => new Date());
   const { data: globalAssignments, isLoading: globalLoading } = useGlobalAssignments(globalMonth);
 
+  const [showModal, setShowModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+
   const propertyManagers = staff?.filter((s) => s.role === 'property_manager') || [];
   const housekeepers = staff?.filter((s) => s.role === 'housekeeper') || [];
+
+  const handleCreate = () => {
+    setEditingStaff(null);
+    setShowModal(true);
+  };
+
+  const handleEdit = (member: StaffMember) => {
+    setEditingStaff(member);
+    setShowModal(true);
+  };
+
+  const handleToggleActive = async (member: StaffMember) => {
+    await updateStaff(member.id, { is_active: !member.is_active });
+    toast(member.is_active ? 'Personal desactivado' : 'Personal activado');
+  };
+
+  const handleSave = async (data: StaffFormData) => {
+    if (editingStaff) {
+      await updateStaff(editingStaff.id, data);
+      toast('Personal actualizado');
+    } else {
+      await createStaff(data);
+      toast('Personal creado exitosamente');
+    }
+  };
+
+  /* -- Action column shared by both tables ---- */
+  const actionsColumn: Column<StaffMember> = {
+    key: 'actions',
+    header: 'Acciones',
+    render: (s) => (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => { e.stopPropagation(); handleEdit(s); }}
+          title="Editar"
+          className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-indigo-subtle hover:text-indigo-700"
+        >
+          <PencilIcon />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleToggleActive(s); }}
+          title={s.is_active ? 'Desactivar' : 'Activar'}
+          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+            s.is_active
+              ? 'text-badge-danger-text hover:bg-badge-danger-bg'
+              : 'text-badge-resolved-text hover:bg-badge-resolved-bg'
+          }`}
+        >
+          {s.is_active ? 'Desactivar' : 'Activar'}
+        </button>
+      </div>
+    ),
+  };
+
+  /* -- columns for Property Managers ------------------------------------ */
+  const pmColumns: Column<StaffMember>[] = [
+    {
+      key: 'name',
+      header: 'Nombre',
+      render: (s) => (
+        <span className="font-medium text-text-primary">
+          {s.first_name} {s.last_name}
+        </span>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (s) => (
+        <span className="text-sm text-text-secondary">{s.email}</span>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Telefono',
+      render: (s) => (
+        <span className="text-sm text-text-secondary">{s.phone || '\u2014'}</span>
+      ),
+    },
+    {
+      key: 'is_active',
+      header: 'Estado',
+      render: (s) => (
+        <span
+          className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
+            s.is_active
+              ? 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border'
+              : 'bg-slate-50 text-text-secondary border border-card-border'
+          }`}
+        >
+          {s.is_active ? 'Activo' : 'Inactivo'}
+        </span>
+      ),
+    },
+    actionsColumn,
+  ];
+
+  /* -- columns for Housekeepers ----------------------------------------- */
+  const hkColumns: Column<StaffMember>[] = [
+    {
+      key: 'name',
+      header: 'Nombre',
+      render: (s) => (
+        <span className="font-medium text-text-primary">
+          {s.first_name} {s.last_name}
+        </span>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (s) => (
+        <span className="text-sm text-text-secondary">{s.email}</span>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Telefono',
+      render: (s) => (
+        <span className="text-sm text-text-secondary">{s.phone || '\u2014'}</span>
+      ),
+    },
+    {
+      key: 'is_active',
+      header: 'Estado',
+      render: (s) => (
+        <span
+          className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
+            s.is_active
+              ? 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border'
+              : 'bg-slate-50 text-text-secondary border border-card-border'
+          }`}
+        >
+          {s.is_active ? 'Activo' : 'Inactivo'}
+        </span>
+      ),
+    },
+    actionsColumn,
+  ];
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Personal"
-        subtitle="Gestión de Property Managers y pool de Housekeepers"
+        subtitle="Gestion de Property Managers y pool de Housekeepers"
+        actions={
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-900/90"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Agregar Personal
+          </button>
+        }
       />
 
       {error && (
@@ -146,20 +231,20 @@ export default function StaffPage() {
       {/* Property Managers section */}
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-brand-100">
-            <UsersIcon className="h-4 w-4 text-brand-700" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-indigo-subtle">
+            <UsersIcon className="h-4 w-4 text-indigo-700" />
           </div>
-          <h2 className="font-display text-lg font-semibold text-brand-950">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Property Managers
           </h2>
           {!isLoading && (
-            <span className="inline-flex items-center rounded-pill bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+            <span className="inline-flex items-center rounded-pill bg-indigo-subtle px-2.5 py-0.5 text-xs font-medium text-indigo-700">
               {propertyManagers.length}
             </span>
           )}
         </div>
         {isLoading ? (
-          <TableSkeleton rows={2} cols={4} />
+          <TableSkeleton rows={2} cols={5} />
         ) : (
           <DataTable<StaffMember>
             columns={pmColumns}
@@ -172,20 +257,20 @@ export default function StaffPage() {
       {/* Housekeepers Pool section */}
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-status-info-light">
-            <UsersIcon className="h-4 w-4 text-status-info-dark" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-badge-progress-bg">
+            <UsersIcon className="h-4 w-4 text-badge-progress-text" />
           </div>
-          <h2 className="font-display text-lg font-semibold text-brand-950">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Pool de Housekeepers
           </h2>
           {!isLoading && (
-            <span className="inline-flex items-center rounded-pill bg-status-info-light px-2.5 py-0.5 text-xs font-medium text-status-info-dark">
+            <span className="inline-flex items-center rounded-pill bg-badge-progress-bg px-2.5 py-0.5 text-xs font-medium text-badge-progress-text">
               {housekeepers.length}
             </span>
           )}
         </div>
         {isLoading ? (
-          <TableSkeleton rows={4} cols={4} />
+          <TableSkeleton rows={4} cols={5} />
         ) : (
           <DataTable<StaffMember>
             columns={hkColumns}
@@ -199,10 +284,10 @@ export default function StaffPage() {
       {/* Global Shift Grid */}
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-status-info-light">
-            <CalendarIcon className="h-4 w-4 text-status-info-dark" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-card bg-badge-progress-bg">
+            <CalendarIcon className="h-4 w-4 text-badge-progress-text" />
           </div>
-          <h2 className="font-display text-lg font-semibold text-brand-950">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Parrilla Global de Turnos
           </h2>
         </div>
@@ -213,12 +298,21 @@ export default function StaffPage() {
         />
         {globalLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-300 border-t-brand-950" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-card-border border-t-indigo-700" />
           </div>
         ) : (
           <ShiftGrid mode="global" assignments={globalAssignments || []} currentMonth={globalMonth} />
         )}
       </div>
+
+      {/* Staff Form Modal */}
+      {showModal && (
+        <StaffFormModal
+          staff={editingStaff}
+          onClose={() => setShowModal(false)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

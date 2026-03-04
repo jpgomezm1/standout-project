@@ -10,19 +10,22 @@ interface EventTimelineProps {
 }
 
 function getDotColor(eventType: string): string {
-  if (eventType.includes('RESOLVED') || eventType.includes('RETURNED')) {
-    return 'bg-status-success';
+  if (eventType.includes('RESOLVED') || eventType.includes('RETURNED') || eventType.includes('REPLACED')) {
+    return 'bg-green-500';
   }
   if (eventType.includes('BROKEN') || eventType.includes('MISSING') || eventType.includes('LOST')) {
-    return 'bg-status-danger';
+    return 'bg-teal-600';
   }
   if (eventType.includes('ACKNOWLEDGED') || eventType.includes('LOW_STOCK') || eventType.includes('PARTIALLY')) {
-    return 'bg-status-warning';
+    return 'bg-teal-600';
   }
   if (eventType.includes('IN_PROGRESS') || eventType.includes('SENT')) {
-    return 'bg-status-info';
+    return 'bg-indigo-700';
   }
-  return 'bg-brand-400';
+  if (eventType.includes('MAINTENANCE')) {
+    return 'bg-slate-400';
+  }
+  return 'bg-text-muted';
 }
 
 function getEventDescription(event: OperationalEvent): string {
@@ -39,14 +42,14 @@ function getEventDescription(event: OperationalEvent): string {
 export default function EventTimeline({ events }: EventTimelineProps) {
   if (events.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-brand-300 bg-white px-6 py-8 text-center shadow-card">
-        <p className="text-sm text-brand-500">Sin eventos recientes</p>
+      <div className="rounded-card border border-dashed border-card-border bg-white px-6 py-8 text-center shadow-card">
+        <p className="text-sm text-text-muted">Sin eventos recientes</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+    <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
       {events.map((event, idx) => (
         <TimelineEntry
           key={event.id}
@@ -57,16 +60,16 @@ export default function EventTimeline({ events }: EventTimelineProps) {
             <div>
               <span
                 className={`inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-medium ${
-                  EVENT_TYPE_COLORS[event.event_type] || 'bg-brand-100 text-brand-700'
+                  EVENT_TYPE_COLORS[event.event_type] || 'bg-indigo-subtle text-indigo-700'
                 }`}
               >
                 {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
               </span>
-              <p className="mt-1 text-sm text-brand-700">
+              <p className="mt-1 text-sm text-text-secondary">
                 {getEventDescription(event)}
               </p>
               {event.confidence_score < 1 && (
-                <p className="mt-0.5 text-xs text-brand-400">
+                <p className="mt-0.5 text-xs text-text-muted">
                   Confianza: {Math.round(event.confidence_score * 100)}%
                 </p>
               )}
