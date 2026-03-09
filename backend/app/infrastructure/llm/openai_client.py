@@ -7,6 +7,7 @@ via GPT-4o with OpenAI Structured Outputs.
 from __future__ import annotations
 
 import base64
+import io
 import logging
 
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError, RateLimitError
@@ -70,9 +71,11 @@ class OpenAIClient(ILLMClient):
             Raw audio bytes (typically Opus-encoded OGG from Telegram).
         """
         logger.debug("Transcribing %d bytes of audio", len(audio_data))
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.ogg"
         transcript = await self.client.audio.transcriptions.create(
             model=self._transcription_model,
-            file=("audio.ogg", audio_data, "audio/ogg"),
+            file=audio_file,
             language="es",
         )
         logger.info("Transcription complete (%d chars)", len(transcript.text))

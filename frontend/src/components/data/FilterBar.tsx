@@ -18,16 +18,16 @@ interface FilterBarProps {
 
 export default function FilterBar({ filters }: FilterBarProps) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-4 rounded-card border border-brand-200 bg-white px-4 py-3 shadow-card">
+    <div className="mb-4 flex flex-wrap items-center gap-4 rounded-card border border-card-border bg-card-bg px-4 py-3 shadow-card">
       {filters.map((filter) => (
         <div key={filter.label} className="flex items-center gap-2">
-          <label className="text-xs font-medium tracking-wide text-brand-500">
+          <label className="text-xs font-medium tracking-wide text-text-muted">
             {filter.label}
           </label>
           <select
             value={filter.value}
             onChange={(e) => filter.onChange(e.target.value)}
-            className="rounded-md border border-brand-300 bg-white px-3 py-1.5 text-sm text-brand-950 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-1.5 text-sm text-[#111827] placeholder-text-muted focus:border-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-700/30"
           >
             {filter.options.map((opt) => (
               <option key={opt.value} value={opt.value}>

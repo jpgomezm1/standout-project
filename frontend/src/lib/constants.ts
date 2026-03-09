@@ -6,31 +6,34 @@ export const POLLING_INTERVALS = {
   EVENTS: 30_000,
 } as const;
 
+/* ── Status badges (design system) ── */
+
 export const STATUS_COLORS: Record<string, string> = {
-  open: 'bg-status-danger-light text-status-danger-dark',
-  acknowledged: 'bg-status-warning-light text-status-warning-dark',
-  in_progress: 'bg-status-info-light text-status-info-dark',
-  resolved: 'bg-status-success-light text-status-success-dark',
+  open: 'bg-[#EEF2FF] text-[#1E3A8A] border border-[#C7D2FE]',
+  acknowledged: 'bg-[#EEF2FF] text-[#A5B4FC] border border-[#C7D2FE]',
+  in_progress: 'bg-[#EEF2FF] text-[#3B4FE0] border border-[#C7D2FE]',
+  resolved: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
 } as const;
 
 export const PRIORITY_COLORS: Record<string, string> = {
-  critical: 'bg-status-danger-light text-status-danger-dark',
-  high: 'bg-status-warning-light text-status-warning-dark',
-  medium: 'bg-status-info-light text-status-info-dark',
-  low: 'bg-brand-100 text-brand-700',
+  critical: 'bg-badge-danger-bg text-badge-danger-text border border-badge-danger-border',
+  high: 'bg-[#EEF2FF] text-[#1E3A8A] border border-[#C7D2FE]',
+  medium: 'bg-[#EEF2FF] text-[#3B4FE0] border border-[#C7D2FE]',
+  low: 'bg-[#EEF2FF] text-[#A5B4FC] border border-[#C7D2FE]',
 } as const;
 
 export const LAUNDRY_STATUS_COLORS: Record<string, string> = {
-  sent: 'bg-status-info-light text-status-info-dark',
-  in_progress: 'bg-status-warning-light text-status-warning-dark',
-  returned: 'bg-status-success-light text-status-success-dark',
-  partially_returned: 'bg-status-warning-light text-status-warning-dark',
-  lost: 'bg-status-danger-light text-status-danger-dark',
+  sent: 'bg-badge-sent-bg text-badge-sent-text border border-badge-sent-border',
+  in_progress: 'bg-badge-progress-bg text-badge-progress-text border border-badge-progress-border',
+  returned: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  partially_returned: 'bg-badge-acknowledged-bg text-badge-acknowledged-text border border-badge-acknowledged-border',
+  lost: 'bg-badge-danger-bg text-badge-danger-text border border-badge-danger-border',
 } as const;
 
 export const EVENT_TYPE_LABELS: Record<string, string> = {
   ITEM_BROKEN: 'Ítem Roto',
   ITEM_MISSING: 'Ítem Faltante',
+  ITEM_REPLACED: 'Ítem Repuesto',
   ITEM_SENT_TO_LAUNDRY: 'Enviado a Lavandería',
   ITEM_RETURNED_FROM_LAUNDRY: 'Devuelto de Lavandería',
   MAINTENANCE_ISSUE: 'Problema de Mantenimiento',
@@ -69,18 +72,19 @@ export const LAUNDRY_STATUS_LABELS: Record<string, string> = {
 } as const;
 
 export const EVENT_TYPE_COLORS: Record<string, string> = {
-  ITEM_BROKEN: 'bg-status-danger-light text-status-danger-dark',
-  ITEM_MISSING: 'bg-status-danger-light text-status-danger-dark',
-  ITEM_SENT_TO_LAUNDRY: 'bg-status-info-light text-status-info-dark',
-  ITEM_RETURNED_FROM_LAUNDRY: 'bg-status-success-light text-status-success-dark',
-  MAINTENANCE_ISSUE: 'bg-status-warning-light text-status-warning-dark',
-  LOW_STOCK_ALERT: 'bg-status-warning-light text-status-warning-dark',
-  INCIDENT_ACKNOWLEDGED: 'bg-status-warning-light text-status-warning-dark',
-  INCIDENT_IN_PROGRESS: 'bg-status-info-light text-status-info-dark',
-  INCIDENT_RESOLVED: 'bg-status-success-light text-status-success-dark',
-  LAUNDRY_RETURNED: 'bg-status-success-light text-status-success-dark',
-  LAUNDRY_PARTIALLY_RETURNED: 'bg-status-warning-light text-status-warning-dark',
-  LAUNDRY_LOST: 'bg-status-danger-light text-status-danger-dark',
+  ITEM_BROKEN: 'bg-teal-subtle text-teal-600 border border-teal-600/20',
+  ITEM_MISSING: 'bg-teal-subtle text-teal-600 border border-teal-600/20',
+  ITEM_REPLACED: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  ITEM_SENT_TO_LAUNDRY: 'bg-badge-sent-bg text-badge-sent-text border border-badge-sent-border',
+  ITEM_RETURNED_FROM_LAUNDRY: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  MAINTENANCE_ISSUE: 'bg-slate-100 text-slate-500 border border-slate-300/30',
+  LOW_STOCK_ALERT: 'bg-badge-inventory-low-bg text-badge-inventory-low-text',
+  INCIDENT_ACKNOWLEDGED: 'bg-badge-acknowledged-bg text-badge-acknowledged-text border border-badge-acknowledged-border',
+  INCIDENT_IN_PROGRESS: 'bg-badge-progress-bg text-badge-progress-text border border-badge-progress-border',
+  INCIDENT_RESOLVED: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  LAUNDRY_RETURNED: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  LAUNDRY_PARTIALLY_RETURNED: 'bg-badge-acknowledged-bg text-badge-acknowledged-text border border-badge-acknowledged-border',
+  LAUNDRY_LOST: 'bg-badge-danger-bg text-badge-danger-text border border-badge-danger-border',
 } as const;
 
 export const PRIORITY_ORDER: Record<string, number> = {
@@ -91,10 +95,10 @@ export const PRIORITY_ORDER: Record<string, number> = {
 } as const;
 
 export const RESERVATION_STATUS_COLORS: Record<string, string> = {
-  confirmed: 'bg-status-info-light text-status-info-dark',
-  in_progress: 'bg-status-warning-light text-status-warning-dark',
-  completed: 'bg-status-success-light text-status-success-dark',
-  cancelled: 'bg-brand-100 text-brand-600',
+  confirmed: 'bg-badge-progress-bg text-badge-progress-text border border-badge-progress-border',
+  in_progress: 'bg-badge-acknowledged-bg text-badge-acknowledged-text border border-badge-acknowledged-border',
+  completed: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  cancelled: 'bg-slate-50 text-text-secondary border border-card-border',
 } as const;
 
 export const CHANNEL_LABELS: Record<string, string> = {
@@ -107,8 +111,8 @@ export const CHANNEL_LABELS: Record<string, string> = {
 export const CHANNEL_COLORS: Record<string, string> = {
   airbnb: '#FF5A5F',
   booking: '#003580',
-  direct: '#10B981',
-  other: '#6B7280',
+  direct: '#16A34A',
+  other: '#94A3B8',
 } as const;
 
 export const STAFF_ROLE_LABELS: Record<string, string> = {
@@ -117,8 +121,8 @@ export const STAFF_ROLE_LABELS: Record<string, string> = {
 } as const;
 
 export const STAFF_ROLE_COLORS: Record<string, string> = {
-  housekeeper: 'bg-status-info-light text-status-info-dark',
-  property_manager: 'bg-brand-100 text-brand-700',
+  housekeeper: 'bg-badge-progress-bg text-badge-progress-text border border-badge-progress-border',
+  property_manager: 'bg-indigo-subtle text-indigo-700 border border-indigo-300/30',
 } as const;
 
 export const ASSIGNMENT_STATUS_LABELS: Record<string, string> = {
@@ -128,7 +132,7 @@ export const ASSIGNMENT_STATUS_LABELS: Record<string, string> = {
 } as const;
 
 export const ASSIGNMENT_STATUS_COLORS: Record<string, string> = {
-  scheduled: 'bg-status-info-light text-status-info-dark',
-  completed: 'bg-status-success-light text-status-success-dark',
-  cancelled: 'bg-brand-100 text-brand-600',
+  scheduled: 'bg-badge-progress-bg text-badge-progress-text border border-badge-progress-border',
+  completed: 'bg-badge-resolved-bg text-badge-resolved-text border border-badge-resolved-border',
+  cancelled: 'bg-slate-50 text-text-secondary border border-card-border',
 } as const;

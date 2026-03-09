@@ -11,7 +11,7 @@ class ExtractedEvent(BaseModel):
     event_type: str = Field(
         description=(
             "One of the valid event types: ITEM_BROKEN, ITEM_MISSING, "
-            "ITEM_SENT_TO_LAUNDRY, ITEM_RETURNED_FROM_LAUNDRY, "
+            "ITEM_REPLACED, ITEM_SENT_TO_LAUNDRY, ITEM_RETURNED_FROM_LAUNDRY, "
             "MAINTENANCE_ISSUE, LOW_STOCK_ALERT, INCIDENT_ACKNOWLEDGED, "
             "INCIDENT_IN_PROGRESS, INCIDENT_RESOLVED, LAUNDRY_RETURNED, "
             "LAUNDRY_PARTIALLY_RETURNED, LAUNDRY_LOST"

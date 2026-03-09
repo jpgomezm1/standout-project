@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Sidebar from '@/components/layout/Sidebar';
+import { ToastProvider } from '@/components/shared/Toast';
 
 export const metadata: Metadata = {
   title: 'StandOut - Panel de Operaciones',
@@ -15,12 +16,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="font-sans">
-        <Sidebar />
-        <main className="ml-72 min-h-screen bg-brand-50 px-10 py-8">
-          <div className="mx-auto max-w-6xl">
-            {children}
-          </div>
-        </main>
+        <ToastProvider>
+          <Sidebar />
+          <main className="ml-72 min-h-screen bg-page">
+            <div className="mx-auto max-w-6xl px-10 py-8">
+              {children}
+            </div>
+          </main>
+        </ToastProvider>
       </body>
     </html>
   );

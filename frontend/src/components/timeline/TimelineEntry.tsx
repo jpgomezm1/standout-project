@@ -7,7 +7,7 @@ interface TimelineEntryProps {
 }
 
 export default function TimelineEntry({
-  dotColor = 'bg-brand-400',
+  dotColor = 'bg-text-muted',
   isLast = false,
   children,
 }: TimelineEntryProps) {
@@ -18,7 +18,7 @@ export default function TimelineEntry({
           className={`relative z-10 h-2.5 w-2.5 rounded-full ring-4 ring-white ${dotColor}`}
         />
         {!isLast && (
-          <div className="w-px flex-1 bg-brand-200" />
+          <div className="w-px flex-1 bg-card-border" />
         )}
       </div>
       <div className="flex-1 pb-2">{children}</div>

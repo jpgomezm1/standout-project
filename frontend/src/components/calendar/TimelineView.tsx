@@ -58,10 +58,10 @@ export default function TimelineView({
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-200 bg-white shadow-card">
+    <div className="overflow-hidden rounded-card border border-card-border bg-white shadow-card">
       {/* Day headers */}
-      <div className="flex border-b border-brand-200 bg-brand-50">
-        <div className="w-48 shrink-0 border-r border-brand-200 px-3 py-2 text-xs font-medium uppercase tracking-wider text-brand-500">
+      <div className="flex border-b border-card-border bg-slate-50">
+        <div className="w-48 shrink-0 border-r border-card-border px-3 py-2 text-xs font-medium uppercase tracking-wider text-text-muted">
           Huésped
         </div>
         <div className="relative flex-1 overflow-x-auto">
@@ -69,10 +69,10 @@ export default function TimelineView({
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className={`flex-1 border-r border-brand-100 px-0.5 py-2 text-center text-[10px] font-medium ${
+                className={`flex-1 border-r border-card-border px-0.5 py-2 text-center text-[10px] font-medium ${
                   isToday(day)
-                    ? 'bg-brand-200 font-bold text-brand-950'
-                    : 'text-brand-500'
+                    ? 'bg-card-border font-bold text-text-primary'
+                    : 'text-text-muted'
                 }`}
                 style={{ minWidth: '32px' }}
               >
@@ -85,7 +85,7 @@ export default function TimelineView({
 
       {/* Reservation rows */}
       {activeReservations.length === 0 ? (
-        <div className="px-4 py-8 text-center text-sm text-brand-500">
+        <div className="px-4 py-8 text-center text-sm text-text-muted">
           No hay reservas en este mes
         </div>
       ) : (
@@ -98,12 +98,12 @@ export default function TimelineView({
             return (
               <div
                 key={reservation.id}
-                className="flex border-b border-brand-100 hover:bg-brand-50"
+                className="flex border-b border-card-border hover:bg-slate-50"
               >
                 {/* Guest info */}
-                <div className="flex w-48 shrink-0 items-center gap-2 border-r border-brand-200 px-3 py-2">
+                <div className="flex w-48 shrink-0 items-center gap-2 border-r border-card-border px-3 py-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-brand-950">
+                    <p className="truncate text-sm font-medium text-text-primary">
                       {reservation.guest_name}
                     </p>
                     <span

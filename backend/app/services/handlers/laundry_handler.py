@@ -66,6 +66,11 @@ class LaundryHandler(AbstractEventHandler):
         now = datetime.now(timezone.utc)
 
         items = payload.get("items", [])
+        # If LLM returned item_name/quantity instead of items list, build it
+        if not items and payload.get("item_name"):
+            qty = int(payload.get("quantity", 1))
+            items = [{"name": payload["item_name"], "quantity": qty}]
+
         total_pieces = payload.get(
             "total_pieces",
             sum(i.get("quantity", 0) for i in items),
@@ -109,38 +114,61 @@ class LaundryHandler(AbstractEventHandler):
         )
 
     async def _update_flow_status(self, event: OperationalEvent) -> None:
-        """Transition an existing ``LaundryFlow`` to a new status."""
-        flow_id_raw = event.payload.get("laundry_flow_id")
-        if not flow_id_raw:
-            logger.error(
-                "Laundry status event %s is missing 'laundry_flow_id' in payload",
-                event.id,
-            )
-            return
+        """Transition an existing ``LaundryFlow`` to a new status.
 
-        try:
-            flow_id = UUID(str(flow_id_raw))
-        except ValueError:
-            logger.error(
-                "Invalid laundry_flow_id '%s' in event %s payload",
-                flow_id_raw,
-                event.id,
-            )
-            return
+        If ``laundry_flow_id`` is present in the payload, it is used directly.
+        Otherwise the handler looks up the most recent open flow for the
+        property, which covers the common Telegram-driven scenario where the
+        user simply says "devolvieron las toallas del Penthouse".
+        """
+        flow_id_raw = event.payload.get("laundry_flow_id")
 
         async with self._session_factory() as session:
             repo = self._repo_factory(session)
-            flow = await repo.get_by_id(flow_id)
+
+            flow = None
+            if flow_id_raw:
+                try:
+                    flow_id = UUID(str(flow_id_raw))
+                except ValueError:
+                    logger.error(
+                        "Invalid laundry_flow_id '%s' in event %s payload",
+                        flow_id_raw,
+                        event.id,
+                    )
+                    return
+                flow = await repo.get_by_id(flow_id)
+            else:
+                # Fallback: find the most recent open flow for the property
+                flow = await repo.get_latest_open_by_property(event.property_id)
+                if flow:
+                    logger.info(
+                        "No laundry_flow_id in event %s; matched latest open flow %s",
+                        event.id,
+                        flow.id,
+                    )
+
             if flow is None:
                 logger.warning(
-                    "LaundryFlow %s not found when processing event %s",
-                    flow_id,
+                    "No matching LaundryFlow found for event %s (property %s)",
                     event.id,
+                    event.property_id,
                 )
                 return
 
             new_status = _STATUS_TRANSITION_MAP[event.event_type]
             now = datetime.now(timezone.utc)
+
+            # Smart status: compare returned quantity vs total to decide
+            # if it's a full or partial return
+            if new_status == LaundryStatus.RETURNED:
+                returned_qty = int(event.payload.get("quantity", 0))
+                if returned_qty > 0 and returned_qty < flow.total_pieces:
+                    new_status = LaundryStatus.PARTIALLY_RETURNED
+                    logger.info(
+                        "Returned %d of %d pieces for flow %s → partially_returned",
+                        returned_qty, flow.total_pieces, flow.id,
+                    )
 
             update_fields: dict = {"status": new_status, "updated_at": now}
             if new_status == LaundryStatus.RETURNED:

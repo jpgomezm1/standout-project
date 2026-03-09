@@ -28,16 +28,16 @@ export default function CalendarHeader({
       <div className="flex items-center gap-3">
         <button
           onClick={onPrevMonth}
-          className="rounded-pill border border-brand-300 bg-white px-3 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:border-brand-500 hover:shadow-card"
+          className="rounded-pill border border-card-border bg-white px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:border-indigo-300 hover:shadow-card"
         >
           &larr;
         </button>
-        <h2 className="min-w-[180px] text-center font-display text-lg font-semibold capitalize text-brand-950">
+        <h2 className="min-w-[180px] text-center font-display text-lg font-semibold capitalize text-text-primary">
           {monthLabel}
         </h2>
         <button
           onClick={onNextMonth}
-          className="rounded-pill border border-brand-300 bg-white px-3 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:border-brand-500 hover:shadow-card"
+          className="rounded-pill border border-card-border bg-white px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:border-indigo-300 hover:shadow-card"
         >
           &rarr;
         </button>
@@ -45,13 +45,13 @@ export default function CalendarHeader({
 
       {/* View mode toggle — only render when both props are provided */}
       {viewMode && onViewModeChange && (
-        <div className="flex overflow-hidden rounded-pill border border-brand-300">
+        <div className="flex overflow-hidden rounded-pill border border-card-border">
           <button
             onClick={() => onViewModeChange('grid')}
             className={`px-4 py-1.5 text-sm font-medium transition-colors ${
               viewMode === 'grid'
-                ? 'bg-brand-950 text-white'
-                : 'bg-white text-brand-700 hover:bg-brand-50'
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-text-secondary hover:bg-slate-50'
             }`}
           >
             Grilla
@@ -60,8 +60,8 @@ export default function CalendarHeader({
             onClick={() => onViewModeChange('timeline')}
             className={`px-4 py-1.5 text-sm font-medium transition-colors ${
               viewMode === 'timeline'
-                ? 'bg-brand-950 text-white'
-                : 'bg-white text-brand-700 hover:bg-brand-50'
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-text-secondary hover:bg-slate-50'
             }`}
           >
             Línea de Tiempo

@@ -9,7 +9,7 @@ export interface LaundryFlow {
   id: string;
   property_id: string;
   status: LaundryStatus;
-  items: Array<{ item_name: string; quantity: number }>;
+  items: Array<{ name?: string; item_name?: string; quantity: number }>;
   total_pieces: number;
   sent_at: string;
   expected_return_at: string | null;

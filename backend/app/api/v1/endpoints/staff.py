@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.v1.schemas.staff_schemas import StaffCreate, StaffResponse
+from app.api.v1.schemas.staff_schemas import StaffCreate, StaffResponse, StaffUpdate
 from app.dependencies import DbSessionDep
 from app.domain.entities.staff import StaffMember, StaffRole
 from app.infrastructure.db.repositories.staff_repository import StaffRepository
@@ -113,3 +113,36 @@ async def create_staff_member(
 
     created = await repo.create(new_staff, data.property_id)
     return await _staff_to_response(created, repo)
+
+
+@router.patch("/staff/{staff_id}", response_model=StaffResponse)
+async def update_staff_member(
+    staff_id: UUID,
+    data: StaffUpdate,
+    db: DbSessionDep,
+) -> StaffResponse:
+    """Update an existing staff member."""
+    repo = StaffRepository(db)
+
+    updates = {}
+    if data.first_name is not None:
+        updates["first_name"] = data.first_name
+    if data.last_name is not None:
+        updates["last_name"] = data.last_name
+    if data.email is not None:
+        updates["email"] = data.email
+    if data.phone is not None:
+        updates["phone"] = data.phone
+    if data.role is not None:
+        updates["role"] = data.role.value
+    if data.is_active is not None:
+        updates["is_active"] = data.is_active
+
+    # Only pass property_id if it was explicitly included in the request
+    raw = data.model_dump(exclude_unset=True)
+    property_id = raw.get("property_id", ...)
+
+    updated = await repo.update(staff_id, updates, property_id)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Staff member not found")
+    return await _staff_to_response(updated, repo)

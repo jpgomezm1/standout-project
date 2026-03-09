@@ -166,6 +166,13 @@ class IngestService:
                     if transcription:
                         content = f"{content} {transcription}".strip()
 
+                elif message.message_type == MessageType.PHOTO:
+                    description = await self._interpretation_service.analyze_image(
+                        media_bytes, content
+                    )
+                    if description:
+                        content = f"{content} [Imagen: {description}]".strip()
+
         return content
 
     async def _check_and_clarify(

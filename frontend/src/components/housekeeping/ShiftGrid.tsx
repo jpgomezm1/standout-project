@@ -59,8 +59,8 @@ export default function ShiftGrid({ mode, assignments, currentMonth }: ShiftGrid
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-card border border-brand-200 bg-white py-8 text-center shadow-card">
-        <p className="text-sm text-brand-500">Sin asignaciones de housekeeping este mes</p>
+      <div className="rounded-card border border-card-border bg-white py-8 text-center shadow-card">
+        <p className="text-sm text-text-muted">Sin asignaciones de housekeeping este mes</p>
       </div>
     );
   }
@@ -72,27 +72,27 @@ export default function ShiftGrid({ mode, assignments, currentMonth }: ShiftGrid
   };
 
   return (
-    <div className="overflow-x-auto rounded-card border border-brand-200 bg-white shadow-card">
+    <div className="overflow-x-auto rounded-card border border-card-border bg-white shadow-card">
       <table className="min-w-full">
         <thead>
-          <tr className="bg-brand-50">
-            <th className="sticky left-0 z-10 bg-brand-50 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-brand-500">
+          <tr className="bg-slate-50">
+            <th className="sticky left-0 z-10 bg-slate-50 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-muted">
               {mode === 'staff' ? 'Propiedad' : 'Housekeeper'}
             </th>
             {days.map((d) => (
               <th
                 key={d}
-                className="min-w-[80px] px-1 py-2 text-center text-xs font-medium text-brand-500"
+                className="min-w-[80px] px-1 py-2 text-center text-xs font-medium text-text-muted"
               >
                 {d}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-100">
+        <tbody className="divide-y divide-card-border">
           {rows.map((row) => (
             <tr key={row.key}>
-              <td className="sticky left-0 z-10 bg-white px-4 py-2 text-sm font-medium text-brand-950 whitespace-nowrap">
+              <td className="sticky left-0 z-10 bg-white px-4 py-2 text-sm font-medium text-text-primary whitespace-nowrap">
                 {row.label}
               </td>
               {days.map((d) => {
@@ -102,7 +102,7 @@ export default function ShiftGrid({ mode, assignments, currentMonth }: ShiftGrid
                 if (!cellAssignments || cellAssignments.length === 0) {
                   return (
                     <td key={d} className="px-1 py-2">
-                      <div className="h-8 rounded bg-brand-50" />
+                      <div className="h-8 rounded bg-slate-50" />
                     </td>
                   );
                 }
@@ -111,7 +111,7 @@ export default function ShiftGrid({ mode, assignments, currentMonth }: ShiftGrid
                   <td key={d} className="px-1 py-2">
                     <div className="space-y-1">
                       {cellAssignments.map((a) => {
-                        const statusColor = ASSIGNMENT_STATUS_COLORS[a.status] || 'bg-brand-100 text-brand-600';
+                        const statusColor = ASSIGNMENT_STATUS_COLORS[a.status] || 'bg-slate-50 text-text-secondary';
                         return (
                           <div
                             key={a.id}

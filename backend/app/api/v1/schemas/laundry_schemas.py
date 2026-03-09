@@ -19,6 +19,12 @@ class LaundryStatusEnum(str, Enum):
     LOST = "lost"
 
 
+class LaundryStatusUpdate(BaseModel):
+    """Request body for updating a laundry flow status."""
+
+    status: LaundryStatusEnum
+
+
 class LaundryFlowResponse(BaseModel):
     """Laundry flow batch representation returned by the API."""
 

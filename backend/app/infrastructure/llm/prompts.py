@@ -39,6 +39,42 @@ def get_extraction_system_prompt(context: dict) -> str:
             "if you cannot determine the property."
         )
 
+    # ── Build the inventory block ─────────────────────────────────────────
+    inventory: dict = context.get("inventory", {})
+    if inventory:
+        inv_lines = []
+        for prop_name, items in inventory.items():
+            inv_lines.append(f"  {prop_name}: {', '.join(items)}")
+        inventory_block = (
+            "Known inventory items per property:\n" + "\n".join(inv_lines)
+        )
+    else:
+        inventory_block = ""
+
+    # ── Build the open-incidents block ────────────────────────────────────
+    open_incidents: list[dict] = context.get("open_incidents", [])
+    if open_incidents:
+        inc_lines = []
+        for inc in open_incidents:
+            inc_lines.append(
+                f"  - [{inc['status']}] \"{inc['title']}\" in {inc['property_name']}"
+            )
+        incidents_block = (
+            "Currently open incidents:\n" + "\n".join(inc_lines) + "\n\n"
+            "INCIDENT RESOLUTION RULES:\n"
+            "When a message indicates that a previously reported problem has been "
+            "fixed, replaced, or resolved (e.g., 'ya repusieron el plato', "
+            "'arreglaron el aire', 'ya lo cambiaron'), you MUST emit TWO events:\n"
+            "1. INCIDENT_RESOLVED — to close the incident. Include the item_name "
+            "and property_name so the system can match it.\n"
+            "2. ITEM_REPLACED — to restore the inventory count. Include the same "
+            "item_name, property_name, and quantity.\n"
+            "You do NOT need to provide an incident_id — the system will match "
+            "it automatically."
+        )
+    else:
+        incidents_block = ""
+
     # ── Assemble the full prompt ─────────────────────────────────────────
     return f"""\
 You are an operational event extraction assistant for a short-term rental \
@@ -55,6 +91,7 @@ when a match is found.
 VALID EVENT TYPES (use exactly these strings)
 - ITEM_BROKEN: A physical item (furniture, appliance, fixture) is reported damaged or broken.
 - ITEM_MISSING: An item expected to be present in a property is missing.
+- ITEM_REPLACED: A previously broken or missing item has been replaced or restored (e.g., "ya repusieron el plato", "cambiaron el vaso", "trajeron toallas nuevas").
 - ITEM_SENT_TO_LAUNDRY: Linens, towels, or other washable items are sent out for laundering.
 - ITEM_RETURNED_FROM_LAUNDRY: Items have been returned from the laundry service.
 - MAINTENANCE_ISSUE: A general maintenance problem (plumbing, electrical, structural, etc.).
@@ -68,6 +105,19 @@ VALID EVENT TYPES (use exactly these strings)
 
 {properties_block}
 
+{inventory_block}
+
+{incidents_block}
+
+ITEM NAME MATCHING
+- When the user mentions an item, ALWAYS match it to the closest item from the \
+known inventory list above. Use the EXACT inventory name in "item_name".
+- Examples: "toallas" → "Toallas Baño", "platos" → "Platos Grandes", \
+"vasos" → "Vasos", "sabanas" → "Sábanas Queen".
+- If the user specifies a detail that differentiates items (e.g., "platos chiquitos" \
+vs "platos grandes"), use that to pick the right inventory item.
+- If no inventory item matches, use a descriptive name in Spanish.
+
 EXTRACTION RULES
 1. Extract ALL distinct operational events mentioned in the message. A single \
 message may describe multiple events.
@@ -75,14 +125,25 @@ message may describe multiple events.
    - event_type: one of the valid types listed above.
    - property_name: the canonical name of the property if identifiable, \
 otherwise null.
-   - item_name: the specific item involved (e.g. "bath towel", "microwave"), \
+   - item_name: the specific item involved, ALWAYS in Spanish \
+(e.g. "toalla de baño", "microondas", "vaso", "plato", "sábana"), \
 or null if not applicable.
    - quantity: the number of items affected. Default to 1 if not stated.
-   - description: a concise human-readable description in the original language.
+   - description: a concise human-readable description in Spanish.
    - confidence: a float between 0 and 1 indicating how certain you are about \
 this extraction. Use values below 0.5 when guessing.
-   - priority: one of "low", "medium", "high", "critical". Use "critical" only \
-for safety hazards or situations that block guest check-in.
+   - priority: one of "low", "medium", "high", "critical". You MUST follow \
+these rules strictly — when in doubt, default to "low":
+     * critical: ONLY for safety hazards or issues that block guest check-in \
+(gas leak, broken lock, no hot water, flooding, electrical hazard).
+     * high: ONLY when it significantly impacts the guest stay and needs urgent \
+repair (broken AC in summer, fridge not working, toilet not flushing).
+     * medium: a noticeable inconvenience that affects comfort but the guest can \
+still stay (broken microwave, stained sofa, noisy appliance).
+     * low: cosmetic issues, single items not working, minor problems, or low \
+stock (a lamp not working, a light bulb out, scratch on furniture, missing \
+towels, low soap stock, small stain). THIS IS THE DEFAULT — use "low" unless \
+there is a clear reason to escalate.
 3. If you are unsure about the property, set property_name to null and lower \
 the confidence score.
 4. If the message does not contain any operational events, return an empty \

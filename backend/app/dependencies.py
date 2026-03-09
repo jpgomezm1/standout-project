@@ -67,12 +67,41 @@ def get_ingest_service(
     event_engine: EventEngineDep,
 ) -> Any:
     """Build an IngestService with its required collaborators."""
+    from app.infrastructure.channels.telegram_adapter import TelegramAdapter
+    from app.infrastructure.db.repositories.event_repository import EventRepository
+    from app.infrastructure.db.repositories.inventory_repository import InventoryRepository
+    from app.infrastructure.db.repositories.property_repository import PropertyRepository
+    from app.infrastructure.db.repositories.raw_message_repository import RawMessageRepository
+    from app.infrastructure.llm.openai_client import OpenAIClient
+    from app.services.clarification_service import ClarificationService
+    from app.services.entity_resolver import EntityResolver
     from app.services.ingest_service import IngestService
+    from app.services.interpretation_service import InterpretationService
+
+    from app.infrastructure.db.repositories.incident_repository import IncidentRepository
+
+    openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
+    property_repo = PropertyRepository(session)
+    inventory_repo = InventoryRepository(session)
+    incident_repo = IncidentRepository(session)
+    entity_resolver = EntityResolver(property_repo, inventory_repo, incident_repo)
+    interpretation_service = InterpretationService(openai_client, entity_resolver)
+    event_store = EventRepository(session)
+    telegram_adapter = TelegramAdapter(
+        bot_token=settings.TELEGRAM_BOT_TOKEN,
+        webhook_secret=settings.TELEGRAM_WEBHOOK_SECRET,
+    )
+    clarification_service = ClarificationService(telegram_adapter)
+    raw_message_repo = RawMessageRepository(session)
 
     return IngestService(
-        session=session,
-        settings=settings,
+        raw_message_repo=raw_message_repo,
+        interpretation_service=interpretation_service,
+        event_store=event_store,
         event_engine=event_engine,
+        channel_adapter=telegram_adapter,
+        clarification_service=clarification_service,
+        settings=settings,
     )
 
 

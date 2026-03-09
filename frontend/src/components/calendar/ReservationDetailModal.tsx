@@ -53,17 +53,17 @@ export default function ReservationDetailModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50"
         onClick={onClose}
       >
         <div
-          className="w-full max-w-lg rounded-card border border-brand-200 bg-white shadow-card-hover"
+          className="w-full max-w-lg rounded-card border border-card-border bg-white shadow-card-hover"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-start justify-between border-b border-brand-200 px-6 py-4">
+          <div className="flex items-start justify-between border-b border-card-border px-6 py-4">
             <div>
-              <h3 className="font-display text-lg font-semibold text-brand-950">
+              <h3 className="font-display text-lg font-semibold text-text-primary">
                 {reservation.guest_name}
               </h3>
               <div className="mt-1 flex items-center gap-2">
@@ -82,7 +82,7 @@ export default function ReservationDetailModal({
             </div>
             <button
               onClick={onClose}
-              className="text-brand-400 transition-colors hover:text-brand-700"
+              className="text-text-muted transition-colors hover:text-text-secondary"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -95,18 +95,18 @@ export default function ReservationDetailModal({
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Entrada
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-brand-950">
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
                   {format(checkIn, 'dd MMM yyyy', { locale: es })}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Salida
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-brand-950">
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
                   {format(checkOut, 'dd MMM yyyy', { locale: es })}
                 </p>
               </div>
@@ -115,26 +115,26 @@ export default function ReservationDetailModal({
             {/* Details */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Noches
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-brand-950">
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
                   {nights}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Huéspedes
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-brand-950">
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
                   {reservation.num_guests}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Monto
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-brand-950">
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
                   {reservation.amount ? formatCOP(reservation.amount) : '—'}
                 </p>
               </div>
@@ -143,10 +143,10 @@ export default function ReservationDetailModal({
             {/* Internal notes */}
             {reservation.internal_notes && (
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Notas internas
                 </p>
-                <p className="mt-0.5 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+                <p className="mt-0.5 rounded-lg bg-slate-50 px-3 py-2 text-sm text-text-secondary">
                   {reservation.internal_notes}
                 </p>
               </div>
@@ -155,12 +155,12 @@ export default function ReservationDetailModal({
             {/* Housekeeping section */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wider text-brand-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Housekeeping
                 </p>
                 <button
                   onClick={() => setShowAssignModal(true)}
-                  className="rounded-lg bg-brand-950 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-brand-800"
+                  className="rounded-lg bg-slate-900 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-slate-900/90"
                 >
                   + Asignar
                 </button>
@@ -168,23 +168,23 @@ export default function ReservationDetailModal({
 
               {loadingAssignments ? (
                 <div className="flex items-center justify-center py-4">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-300 border-t-brand-950" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-card-border border-t-indigo-700" />
                 </div>
               ) : assignments && assignments.length > 0 ? (
                 <div className="space-y-2">
                   {assignments.map((a) => {
-                    const statusColor = ASSIGNMENT_STATUS_COLORS[a.status] || 'bg-brand-100 text-brand-600';
+                    const statusColor = ASSIGNMENT_STATUS_COLORS[a.status] || 'bg-slate-50 text-text-secondary';
                     return (
                       <div
                         key={a.id}
-                        className="flex items-center justify-between rounded-lg border border-brand-200 px-3 py-2"
+                        className="flex items-center justify-between rounded-lg border border-card-border px-3 py-2"
                       >
                         <div className="flex items-center gap-3">
                           <div>
-                            <p className="text-sm font-medium text-brand-950">
+                            <p className="text-sm font-medium text-text-primary">
                               {a.staff_name}
                             </p>
-                            <p className="text-xs text-brand-500">
+                            <p className="text-xs text-text-muted">
                               {format(parseISO(a.scheduled_date), 'dd MMM yyyy', { locale: es })}
                               {a.notes && ` — ${a.notes}`}
                             </p>
@@ -196,7 +196,7 @@ export default function ReservationDetailModal({
                           </span>
                           <button
                             onClick={() => handleDeleteAssignment(a.id)}
-                            className="text-brand-400 transition-colors hover:text-status-danger-dark"
+                            className="text-text-muted transition-colors hover:text-badge-danger-text"
                             title="Eliminar asignación"
                           >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,7 +209,7 @@ export default function ReservationDetailModal({
                   })}
                 </div>
               ) : (
-                <p className="rounded-lg bg-brand-50 px-3 py-2 text-center text-sm text-brand-500">
+                <p className="rounded-lg bg-slate-50 px-3 py-2 text-center text-sm text-text-muted">
                   Sin asignaciones de housekeeping
                 </p>
               )}

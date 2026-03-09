@@ -17,14 +17,15 @@ export default function NavLink({ href, icon, label }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium tracking-wide transition-all duration-200 ${
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium tracking-wide transition-all duration-200 ${
         isActive
-          ? 'bg-brand-500/15 text-white'
-          : 'text-brand-400 hover:bg-brand-800/40 hover:text-brand-200'
+          ? 'bg-sidebar-active-bg text-sidebar-active-text'
+          : 'text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/5'
       }`}
     >
-      <span className="h-5 w-5 flex-shrink-0">{icon}</span>
+      <span className={`h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-indigo-300' : ''}`}>{icon}</span>
       <span>{label}</span>
+      {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-300" />}
     </Link>
   );
 }

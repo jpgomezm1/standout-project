@@ -43,7 +43,7 @@ export default function StaffDetailPage() {
   if (staffError) {
     return (
       <div>
-        <Link href="/staff" className="mb-4 inline-flex items-center gap-1 text-sm text-brand-500 transition-colors hover:text-brand-700">
+        <Link href="/staff" className="mb-4 inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-text-secondary">
           &larr; Personal
         </Link>
         <ErrorBanner message="Error al cargar detalles del personal." />
@@ -56,40 +56,40 @@ export default function StaffDetailPage() {
       {/* Breadcrumb */}
       <Link
         href="/staff"
-        className="inline-flex items-center gap-1 text-sm text-brand-500 transition-colors hover:text-brand-700"
+        className="inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-text-secondary"
       >
         &larr; Personal
       </Link>
 
       {/* Header */}
       {staffLoading ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <Skeleton rows={2} className="h-5 w-64" />
         </div>
       ) : staffMember ? (
-        <div className="rounded-card border border-brand-200 bg-white p-6 shadow-card">
+        <div className="rounded-card border border-card-border bg-white p-6 shadow-card">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-status-info-light">
-              <span className="text-lg font-semibold text-status-info-dark">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-badge-progress-bg">
+              <span className="text-lg font-semibold text-badge-progress-text">
                 {staffMember.first_name[0]}{staffMember.last_name[0]}
               </span>
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-2xl font-semibold text-brand-950">
+                <h1 className="font-display text-2xl font-semibold text-text-primary">
                   {staffMember.first_name} {staffMember.last_name}
                 </h1>
                 <span
                   className={`inline-flex items-center rounded-pill px-3 py-0.5 text-xs font-medium ${
                     staffMember.is_active
-                      ? 'bg-status-success-light text-status-success-dark'
-                      : 'bg-brand-100 text-brand-600'
+                      ? 'bg-badge-resolved-bg text-badge-resolved-text'
+                      : 'bg-slate-50 text-text-secondary'
                   }`}
                 >
                   {staffMember.is_active ? 'Activa' : 'Inactiva'}
                 </span>
               </div>
-              <div className="mt-1 flex items-center gap-4 text-sm text-brand-600">
+              <div className="mt-1 flex items-center gap-4 text-sm text-text-secondary">
                 <span className="flex items-center gap-1.5">
                   <EnvelopeIcon className="h-3.5 w-3.5" />
                   {staffMember.email}
@@ -108,7 +108,7 @@ export default function StaffDetailPage() {
 
       {/* Shift Grid */}
       <div>
-        <h2 className="mb-3 font-display text-lg font-semibold text-brand-950">
+        <h2 className="mb-3 font-display text-lg font-semibold text-text-primary">
           Agenda de Turnos
         </h2>
         <CalendarHeader
@@ -118,7 +118,7 @@ export default function StaffDetailPage() {
         />
         {assignmentsLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-300 border-t-brand-950" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-card-border border-t-indigo-700" />
           </div>
         ) : (
           <ShiftGrid mode="staff" assignments={assignments || []} currentMonth={month} />

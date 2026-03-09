@@ -73,6 +73,18 @@ class IIncidentRepository(ABC):
         """Transition an incident to a new status, optionally setting resolved_at."""
         ...
 
+    @abstractmethod
+    async def get_latest_open_by_property(
+        self,
+        property_id: UUID,
+        item_name: str | None = None,
+    ) -> Incident | None:
+        """Return the most recent non-resolved incident for a property.
+
+        If *item_name* is provided, prefer incidents whose title contains it.
+        """
+        ...
+
 
 class IInventoryRepository(ABC):
     """Port for inventory item persistence operations."""
@@ -115,6 +127,11 @@ class ILaundryRepository(ABC):
         status: LaundryStatus | None = None,
     ) -> list[LaundryFlow]:
         """Return laundry flows for a property, optionally filtered by status."""
+        ...
+
+    @abstractmethod
+    async def get_latest_open_by_property(self, property_id: UUID) -> LaundryFlow | None:
+        """Return the most recent non-terminal flow for a property."""
         ...
 
     @abstractmethod

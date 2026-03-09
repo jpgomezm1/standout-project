@@ -13,7 +13,7 @@ from uuid import UUID
 
 from thefuzz import fuzz, process  # type: ignore[import-untyped]
 
-from app.domain.interfaces.repositories import IInventoryRepository, IPropertyRepository
+from app.domain.interfaces.repositories import IIncidentRepository, IInventoryRepository, IPropertyRepository
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,13 @@ class EntityResolver:
         self,
         property_repo: IPropertyRepository,
         inventory_repo: IInventoryRepository,
+        incident_repo: IIncidentRepository | None = None,
         *,
         match_threshold: int = _DEFAULT_MATCH_THRESHOLD,
     ) -> None:
         self._property_repo = property_repo
         self._inventory_repo = inventory_repo
+        self._incident_repo = incident_repo
         self._match_threshold = match_threshold
 
     # -- Context building ---------------------------------------------------- #
@@ -51,6 +53,31 @@ class EntityResolver:
         items exist.
         """
         properties = await self._property_repo.get_all()
+
+        # Collect inventory items per property for LLM context
+        inventory_by_property: dict[str, list[str]] = {}
+        for p in properties:
+            items = await self._inventory_repo.get_by_property(p.id)
+            if items:
+                inventory_by_property[p.name] = [item.item_name for item in items]
+
+        # Collect open incidents so the LLM can resolve them
+        open_incidents: list[dict] = []
+        if self._incident_repo:
+            from app.domain.entities.incident import IncidentStatus
+            for p in properties:
+                incidents = await self._incident_repo.get_all(
+                    property_id=p.id,
+                )
+                for inc in incidents:
+                    if inc.status != IncidentStatus.RESOLVED:
+                        open_incidents.append({
+                            "id": str(inc.id),
+                            "title": inc.title,
+                            "property_name": p.name,
+                            "status": inc.status.value,
+                        })
+
         return {
             "properties": [
                 {
@@ -60,6 +87,8 @@ class EntityResolver:
                 }
                 for p in properties
             ],
+            "inventory": inventory_by_property,
+            "open_incidents": open_incidents,
         }
 
     # -- Resolution ---------------------------------------------------------- #
@@ -176,6 +205,7 @@ class EntityResolver:
             matched_name, score = match[0], match[1]
             resolved_item = name_lookup[matched_name]
             event_data["item_id"] = str(resolved_item.id)
+            event_data["item_name"] = resolved_item.item_name
             logger.info(
                 "Resolved item_name '%s' -> '%s' (id=%s, score=%d)",
                 item_name,

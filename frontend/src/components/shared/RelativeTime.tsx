@@ -28,7 +28,7 @@ export default function RelativeTime({ dateString }: RelativeTimeProps) {
   const fullDate = new Date(dateString).toLocaleString('es-CO');
 
   return (
-    <time dateTime={dateString} title={fullDate} className="text-sm font-light text-brand-500">
+    <time dateTime={dateString} title={fullDate} className="text-sm font-light text-text-muted">
       {getRelativeTime(dateString)}
     </time>
   );

@@ -9,7 +9,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Header, 
 from sqlalchemy import select
 
 from app.config import Settings
-from app.dependencies import DbSessionDep, IngestServiceDep, SettingsDep, get_condition_report_service
+from app.dependencies import DbSessionDep, EventEngineDep, IngestServiceDep, SettingsDep, get_condition_report_service
 from app.infrastructure.channels.telegram_adapter import TelegramAdapter
 from app.infrastructure.db.models.property import PropertyModel
 from app.infrastructure.db.models.raw_message import RawMessageModel
@@ -27,6 +27,7 @@ router = APIRouter(prefix="/webhook", tags=["webhook"])
 
 async def process_message_background(
     message_id: UUID,
+    chat_id: int,
     settings: Settings,
 ) -> None:
     """Process a persisted inbound message outside the request lifecycle.
@@ -35,8 +36,25 @@ async def process_message_background(
     immediately.  Errors are logged but never propagated -- Telegram
     must always receive a 200 to avoid retries.
     """
+    from app.infrastructure.channels.telegram_adapter import TelegramAdapter as _TA
+    from app.infrastructure.db.repositories.event_repository import EventRepository
+    from app.infrastructure.db.repositories.inventory_repository import InventoryRepository
+    from app.infrastructure.db.repositories.property_repository import PropertyRepository
+    from app.infrastructure.db.repositories.raw_message_repository import RawMessageRepository
+    from app.infrastructure.llm.openai_client import OpenAIClient
+    from app.services.clarification_service import ClarificationService
+    from app.services.entity_resolver import EntityResolver
+    from app.services.event_engine import EventEngine
+    from app.services.ingest_service import IngestService
+    from app.services.interpretation_service import InterpretationService
+
     engine = get_engine(settings.DATABASE_URL)
     session_factory = get_session_factory(engine)
+
+    telegram_adapter = _TA(
+        bot_token=settings.TELEGRAM_BOT_TOKEN,
+        webhook_secret=settings.TELEGRAM_WEBHOOK_SECRET,
+    )
 
     async with session_factory() as session:
         try:
@@ -52,23 +70,36 @@ async def process_message_background(
             model.processing_status = "processing"
             await session.flush()
 
-            # Build the ingest service dependencies manually for the
-            # background context (we cannot use FastAPI DI here).
-            from app.services.event_engine import EventEngine
-            from app.services.ingest_service import IngestService
-
+            # Build all dependencies for the IngestService
+            openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
+            property_repo = PropertyRepository(session)
+            inventory_repo = InventoryRepository(session)
+            entity_resolver = EntityResolver(property_repo, inventory_repo)
+            interpretation_service = InterpretationService(openai_client, entity_resolver)
+            event_store = EventRepository(session)
             event_engine = EventEngine()
+            clarification_service = ClarificationService(telegram_adapter)
+            raw_message_repo = RawMessageRepository(session)
+
             ingest_service = IngestService(
-                session=session,
-                settings=settings,
+                raw_message_repo=raw_message_repo,
+                interpretation_service=interpretation_service,
+                event_store=event_store,
                 event_engine=event_engine,
+                channel_adapter=telegram_adapter,
+                clarification_service=clarification_service,
+                settings=settings,
             )
 
-            await ingest_service.ingest(model.raw_payload or {})
+            await ingest_service.process_message(message_id)
 
-            # Mark as processed
-            model.processing_status = "processed"
             await session.commit()
+
+            # Notify the user that the message was processed
+            await telegram_adapter.send_message(
+                chat_id,
+                "Mensaje recibido y procesado correctamente.",
+            )
 
             logger.info(
                 "Background processing complete for message %s", message_id
@@ -143,6 +174,7 @@ async def telegram_webhook(
     background_tasks: BackgroundTasks,
     db: DbSessionDep,
     settings: SettingsDep,
+    event_engine: EventEngineDep,
     cr_service=Depends(get_condition_report_service),
     x_telegram_bot_api_secret_token: str | None = Header(default=None),
 ) -> dict[str, str]:
@@ -315,12 +347,54 @@ async def telegram_webhook(
         )
         return {"status": "duplicate"}
 
-    # -- 5. Schedule background processing -------------------------------------
-    background_tasks.add_task(process_message_background, parsed.id, settings)
+    # -- 5. Process message inline (not in background) -------------------------
+    try:
+        from app.infrastructure.db.repositories.event_repository import EventRepository
+        from app.infrastructure.db.repositories.inventory_repository import InventoryRepository
+        from app.infrastructure.db.repositories.property_repository import PropertyRepository
+        from app.infrastructure.db.repositories.raw_message_repository import RawMessageRepository
+        from app.infrastructure.llm.openai_client import OpenAIClient
+        from app.services.clarification_service import ClarificationService
+        from app.services.entity_resolver import EntityResolver
+        from app.services.ingest_service import IngestService
+        from app.services.interpretation_service import InterpretationService
 
-    logger.info(
-        "Accepted Telegram update %s (message_id=%s)",
-        update_id,
-        parsed.id,
-    )
+        openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
+        property_repo = PropertyRepository(db)
+        inventory_repo = InventoryRepository(db)
+        entity_resolver = EntityResolver(property_repo, inventory_repo)
+        interpretation_service = InterpretationService(openai_client, entity_resolver)
+        event_store = EventRepository(db)
+        clarification_service = ClarificationService(telegram_adapter)
+        raw_message_repo = RawMessageRepository(db)
+
+        ingest_service = IngestService(
+            raw_message_repo=raw_message_repo,
+            interpretation_service=interpretation_service,
+            event_store=event_store,
+            event_engine=event_engine,
+            channel_adapter=telegram_adapter,
+            clarification_service=clarification_service,
+            settings=settings,
+        )
+
+        await ingest_service.process_message(parsed.id)
+
+        await telegram_adapter.send_message(
+            chat_id,
+            "Mensaje recibido y procesado correctamente.",
+        )
+
+        logger.info(
+            "Processed Telegram update %s (message_id=%s)",
+            update_id,
+            parsed.id,
+        )
+    except Exception:
+        logger.exception("Failed to process message %s inline", parsed.id)
+        await telegram_adapter.send_message(
+            chat_id,
+            "Mensaje recibido. Hubo un error al procesarlo, se reintentará.",
+        )
+
     return {"status": "accepted"}

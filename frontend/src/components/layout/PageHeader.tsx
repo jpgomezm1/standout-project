@@ -8,11 +8,11 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex items-start justify-between">
+    <div className="animate-fade-up mb-8 flex items-end justify-between border-b border-card-border pb-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-brand-950">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-text-primary">{title}</h1>
         {subtitle && (
-          <p className="mt-1 text-sm font-light text-brand-500">{subtitle}</p>
+          <p className="mt-1.5 text-sm font-light text-text-muted">{subtitle}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}

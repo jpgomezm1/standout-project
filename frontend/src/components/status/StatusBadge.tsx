@@ -5,7 +5,7 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
-  const colorClasses = STATUS_COLORS[status] || 'bg-brand-100 text-brand-700';
+  const colorClasses = STATUS_COLORS[status] || 'bg-indigo-subtle text-indigo-700';
   const displayLabel = STATUS_LABELS[status] || status.replace(/_/g, ' ');
 
   return (
