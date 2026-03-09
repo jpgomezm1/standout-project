@@ -71,7 +71,7 @@ class LaundryRepository(ILaundryRepository):
         stmt = (
             select(LaundryFlowModel)
             .where(LaundryFlowModel.property_id == property_id)
-            .where(LaundryFlowModel.status.in_(["sent", "in_progress"]))
+            .where(LaundryFlowModel.status.in_(["sent", "in_progress", "partially_returned"]))
             .order_by(LaundryFlowModel.sent_at.desc())
             .limit(1)
         )

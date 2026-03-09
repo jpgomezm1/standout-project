@@ -159,16 +159,48 @@ class LaundryHandler(AbstractEventHandler):
             new_status = _STATUS_TRANSITION_MAP[event.event_type]
             now = datetime.now(timezone.utc)
 
-            # Smart status: compare returned quantity vs total to decide
-            # if it's a full or partial return
+            # For return events, accumulate quantities across all returns
+            # to decide if the full batch is back or just a partial return.
             if new_status == LaundryStatus.RETURNED:
                 returned_qty = int(event.payload.get("quantity", 0))
-                if returned_qty > 0 and returned_qty < flow.total_pieces:
+
+                # Sum ALL previous return-type events for this property
+                # since the flow was sent (covers both ITEM_RETURNED_FROM_LAUNDRY
+                # and LAUNDRY_RETURNED events).
+                from app.infrastructure.db.repositories.event_repository import EventRepository
+                event_repo = EventRepository(session)
+                all_events = await event_repo.get_by_property(
+                    property_id=event.property_id, limit=200
+                )
+
+                return_event_types = {
+                    "ITEM_RETURNED_FROM_LAUNDRY",
+                    "LAUNDRY_RETURNED",
+                    "LAUNDRY_PARTIALLY_RETURNED",
+                }
+                previously_returned = 0
+                for e in all_events:
+                    if e.id == event.id:
+                        continue
+                    if e.event_type.value not in return_event_types:
+                        continue
+                    # Only count events after this flow was sent
+                    if e.created_at.replace(tzinfo=None) < flow.sent_at.replace(tzinfo=None):
+                        continue
+                    previously_returned += int(e.payload.get("quantity", 0))
+
+                total_returned = previously_returned + returned_qty
+                logger.info(
+                    "Return calculation for flow %s: current=%d + previous=%d = %d of %d total_pieces",
+                    flow.id, returned_qty, previously_returned, total_returned, flow.total_pieces,
+                )
+
+                if total_returned >= flow.total_pieces:
+                    new_status = LaundryStatus.RETURNED
+                elif total_returned > 0:
                     new_status = LaundryStatus.PARTIALLY_RETURNED
-                    logger.info(
-                        "Returned %d of %d pieces for flow %s → partially_returned",
-                        returned_qty, flow.total_pieces, flow.id,
-                    )
+                # If total_returned == 0 and no quantity info, keep RETURNED
+                # (the LLM explicitly said it's returned)
 
             update_fields: dict = {"status": new_status, "updated_at": now}
             if new_status == LaundryStatus.RETURNED:
