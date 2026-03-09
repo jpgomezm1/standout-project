@@ -78,6 +78,11 @@ async def process_message_background(
             interpretation_service = InterpretationService(openai_client, entity_resolver)
             event_store = EventRepository(session)
             event_engine = EventEngine()
+
+            # Register all domain handlers so events actually get processed
+            from app.services.handlers import register_all_handlers
+            register_all_handlers(event_engine, session_factory=session_factory)
+
             clarification_service = ClarificationService(telegram_adapter)
             raw_message_repo = RawMessageRepository(session)
 

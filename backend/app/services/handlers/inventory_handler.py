@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Callable
 from uuid import UUID
 
 from app.domain.entities.event import EventType, OperationalEvent
+from app.domain.entities.incident import IncidentStatus
 from app.services.handlers.base import AbstractEventHandler
 
 if TYPE_CHECKING:
@@ -52,6 +53,8 @@ class InventoryHandler(AbstractEventHandler):
     async def handle(self, event: OperationalEvent) -> None:
         if event.event_type in (EventType.ITEM_BROKEN, EventType.ITEM_MISSING, EventType.ITEM_REPLACED):
             await self._validate_item(event)
+            if event.event_type == EventType.ITEM_REPLACED:
+                await self._update_incident_on_replacement(event)
         elif event.event_type == EventType.LOW_STOCK_ALERT:
             await self._handle_low_stock_alert(event)
         else:
@@ -103,6 +106,38 @@ class InventoryHandler(AbstractEventHandler):
             event.event_type.value,
             event.id,
         )
+
+    async def _update_incident_on_replacement(self, event: OperationalEvent) -> None:
+        """When an item is replaced, update the related incident status.
+
+        Finds the most recent open/acknowledged incident for the same property
+        and item, then transitions it to IN_PROGRESS (partial replacement).
+        """
+        from app.infrastructure.db.repositories.incident_repository import IncidentRepository
+
+        item_name = event.payload.get("item_name")
+        if not item_name:
+            return
+
+        async with self._session_factory() as session:
+            repo = IncidentRepository(session)
+            incident = await repo.get_latest_open_by_property(
+                event.property_id, item_name=item_name
+            )
+            if incident is None:
+                return
+
+            # Only update if it's still OPEN or ACKNOWLEDGED
+            if incident.status in (IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED):
+                await repo.update_status(incident.id, IncidentStatus.IN_PROGRESS)
+                await session.commit()
+                logger.info(
+                    "Incident %s moved to IN_PROGRESS after partial replacement "
+                    "of '%s' (event %s)",
+                    incident.id,
+                    item_name,
+                    event.id,
+                )
 
     async def _handle_low_stock_alert(self, event: OperationalEvent) -> None:
         """Log a low-stock alert for future notification integration."""

@@ -68,7 +68,11 @@ def get_extraction_system_prompt(context: dict) -> str:
             "1. INCIDENT_RESOLVED — to close the incident. Include the item_name "
             "and property_name so the system can match it.\n"
             "2. ITEM_REPLACED — to restore the inventory count. Include the same "
-            "item_name, property_name, and quantity.\n"
+            "item_name and property_name. CRITICAL: the quantity MUST be the number "
+            "of items replaced AS STATED IN THE CURRENT MESSAGE, NOT the total from "
+            "the original incident. If the user says 'se repuso 1 plato', quantity=1. "
+            "If the user says 'repusieron 3 vasos', quantity=3. Default to 1 if not "
+            "explicitly stated.\n"
             "You do NOT need to provide an incident_id — the system will match "
             "it automatically."
         )
@@ -135,9 +139,9 @@ this extraction. Use values below 0.5 when guessing.
    - priority: one of "low", "medium", "high", "critical". You MUST follow \
 these rules strictly — when in doubt, default to "low":
      * critical: ONLY for safety hazards or issues that block guest check-in \
-(gas leak, broken lock, no hot water, flooding, electrical hazard).
+(gas leak, broken lock, no hot water, flooding, electrical hazard, water leak / fuga de agua).
      * high: ONLY when it significantly impacts the guest stay and needs urgent \
-repair (broken AC in summer, fridge not working, toilet not flushing).
+repair (broken AC in summer, fridge not working, toilet not flushing, water leak / fuga de agua).
      * medium: a noticeable inconvenience that affects comfort but the guest can \
 still stay (broken microwave, stained sofa, noisy appliance).
      * low: cosmetic issues, single items not working, minor problems, or low \
