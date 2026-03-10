@@ -71,10 +71,13 @@ async def process_message_background(
             await session.flush()
 
             # Build all dependencies for the IngestService
+            from app.infrastructure.db.repositories.incident_repository import IncidentRepository as _IR
+
             openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
             property_repo = PropertyRepository(session)
             inventory_repo = InventoryRepository(session)
-            entity_resolver = EntityResolver(property_repo, inventory_repo)
+            incident_repo = _IR(session)
+            entity_resolver = EntityResolver(property_repo, inventory_repo, incident_repo)
             interpretation_service = InterpretationService(openai_client, entity_resolver)
             event_store = EventRepository(session)
             event_engine = EventEngine()
@@ -364,10 +367,13 @@ async def telegram_webhook(
         from app.services.ingest_service import IngestService
         from app.services.interpretation_service import InterpretationService
 
+        from app.infrastructure.db.repositories.incident_repository import IncidentRepository
+
         openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
         property_repo = PropertyRepository(db)
         inventory_repo = InventoryRepository(db)
-        entity_resolver = EntityResolver(property_repo, inventory_repo)
+        incident_repo = IncidentRepository(db)
+        entity_resolver = EntityResolver(property_repo, inventory_repo, incident_repo)
         interpretation_service = InterpretationService(openai_client, entity_resolver)
         event_store = EventRepository(db)
         clarification_service = ClarificationService(telegram_adapter)
