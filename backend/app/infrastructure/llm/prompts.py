@@ -137,17 +137,22 @@ or null if not applicable.
    - confidence: a float between 0 and 1 indicating how certain you are about \
 this extraction. Use values below 0.5 when guessing.
    - priority: one of "low", "medium", "high", "critical". You MUST follow \
-these rules strictly — when in doubt, default to "low":
-     * critical: ONLY for safety hazards or issues that block guest check-in \
-(gas leak, broken lock, no hot water, flooding, electrical hazard, water leak / fuga de agua).
-     * high: ONLY when it significantly impacts the guest stay and needs urgent \
-repair (broken AC in summer, fridge not working, toilet not flushing, water leak / fuga de agua).
-     * medium: a noticeable inconvenience that affects comfort but the guest can \
-still stay (broken microwave, stained sofa, noisy appliance).
-     * low: cosmetic issues, single items not working, minor problems, or low \
-stock (a lamp not working, a light bulb out, scratch on furniture, missing \
-towels, low soap stock, small stain). THIS IS THE DEFAULT — use "low" unless \
-there is a clear reason to escalate.
+these rules VERY strictly — the DEFAULT is ALWAYS "low". Only escalate when \
+you are absolutely certain it matches a higher category:
+     * critical: EXCLUSIVELY for immediate safety hazards or issues that \
+completely block guest check-in. Examples: gas leak, broken front door lock, \
+no hot water in entire unit, flooding, electrical hazard. NOTHING ELSE is critical.
+     * high: EXCLUSIVELY for problems that make the unit significantly \
+uncomfortable or unusable for guests AND require urgent repair. Examples: \
+AC broken in summer, fridge completely not working, toilet not flushing, \
+active water leak. Broken dishes, glasses, or small appliances are NEVER high.
+     * medium: a noticeable inconvenience that affects comfort but the guest \
+can still stay normally. Examples: broken microwave, stained sofa, noisy \
+appliance, multiple items broken at once (3+).
+     * low: THIS IS THE DEFAULT for everything else. Single broken items \
+(glasses, plates, cups, lamps), missing items, cosmetic damage, scratches, \
+stains, low stock, missing towels. A broken glass or plate is ALWAYS low. \
+Use "low" unless there is an extremely clear reason to escalate.
 3. If you are unsure about the property, set property_name to null and lower \
 the confidence score.
 4. If the message does not contain any operational events, return an empty \
