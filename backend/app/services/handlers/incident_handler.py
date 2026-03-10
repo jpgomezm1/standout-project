@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 # Maps creation event types to their default incident priority.
 _EVENT_PRIORITY_MAP: dict[EventType, IncidentPriority] = {
-    EventType.ITEM_BROKEN: IncidentPriority.HIGH,
-    EventType.ITEM_MISSING: IncidentPriority.MEDIUM,
-    EventType.MAINTENANCE_ISSUE: IncidentPriority.MEDIUM,
+    EventType.ITEM_BROKEN: IncidentPriority.LOW,
+    EventType.ITEM_MISSING: IncidentPriority.LOW,
+    EventType.MAINTENANCE_ISSUE: IncidentPriority.LOW,
 }
 
 # Maps creation event types to a human-readable incident type label.
@@ -51,9 +51,16 @@ _STATUS_TRANSITION_MAP: dict[EventType, IncidentStatus] = {
     EventType.INCIDENT_RESOLVED: IncidentStatus.RESOLVED,
 }
 
+# Event types that auto-resolve a matching open incident.
+_AUTO_RESOLVE_TYPES: frozenset[EventType] = frozenset([
+    EventType.ITEM_REPLACED,
+])
+
 # Union of all event types this handler cares about.
 HANDLED_EVENT_TYPES: frozenset[EventType] = frozenset(
-    list(_EVENT_PRIORITY_MAP.keys()) + list(_STATUS_TRANSITION_MAP.keys())
+    list(_EVENT_PRIORITY_MAP.keys())
+    + list(_STATUS_TRANSITION_MAP.keys())
+    + list(_AUTO_RESOLVE_TYPES)
 )
 
 
@@ -73,6 +80,8 @@ class IncidentHandler(AbstractEventHandler):
             await self._create_incident(event)
         elif event.event_type in _STATUS_TRANSITION_MAP:
             await self._update_incident_status(event)
+        elif event.event_type in _AUTO_RESOLVE_TYPES:
+            await self._auto_resolve_incident(event)
         else:
             logger.debug(
                 "IncidentHandler ignoring unrelated event type '%s'",
@@ -87,9 +96,9 @@ class IncidentHandler(AbstractEventHandler):
         now = datetime.now(timezone.utc)
 
         priority_override = payload.get("priority")
-        if priority_override:
+        if priority_override and isinstance(priority_override, str):
             try:
-                priority = IncidentPriority(priority_override)
+                priority = IncidentPriority(priority_override.upper())
             except ValueError:
                 priority = _EVENT_PRIORITY_MAP[event.event_type]
         else:
@@ -142,6 +151,37 @@ class IncidentHandler(AbstractEventHandler):
             stored.priority.value,
             event.id,
         )
+
+    async def _auto_resolve_incident(self, event: OperationalEvent) -> None:
+        """Auto-resolve an open incident when an ITEM_REPLACED event arrives."""
+        item_name = event.payload.get("item_name")
+
+        async with self._session_factory() as session:
+            repo = self._repo_factory(session)
+            incident = await repo.get_latest_open_by_property(
+                event.property_id, item_name=item_name
+            )
+            if incident is None:
+                logger.debug(
+                    "No open incident to auto-resolve for property %s (item=%s)",
+                    event.property_id,
+                    item_name,
+                )
+                return
+
+            resolved_at = datetime.now(timezone.utc)
+            updated = await repo.update_status(
+                incident.id, IncidentStatus.RESOLVED, resolved_at=resolved_at
+            )
+            await session.commit()
+
+        if updated:
+            logger.info(
+                "Auto-resolved incident %s ('%s') from ITEM_REPLACED event %s",
+                updated.id,
+                updated.title,
+                event.id,
+            )
 
     async def _update_incident_status(self, event: OperationalEvent) -> None:
         """Transition an existing incident to a new status.

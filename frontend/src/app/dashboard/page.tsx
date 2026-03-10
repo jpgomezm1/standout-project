@@ -96,8 +96,8 @@ function buildPriorityData(incidents: Incident[]) {
 }
 
 function buildStatusData(incidents: Incident[]) {
-  const counts: Record<string, number> = { open: 0, acknowledged: 0, in_progress: 0, resolved: 0 };
-  incidents.forEach((i) => { counts[i.status] = (counts[i.status] || 0) + 1; });
+  const counts: Record<string, number> = { open: 0, acknowledged: 0, in_progress: 0 };
+  incidents.forEach((i) => { if (i.status !== 'resolved') counts[i.status] = (counts[i.status] || 0) + 1; });
   return Object.entries(counts)
     .filter(([, v]) => v > 0)
     .map(([key, value]) => ({ name: STATUS_LABELS[key], value, color: STATUS_COLORS[key] }));
@@ -152,8 +152,9 @@ export default function DashboardPage() {
   const firstPropertyId = properties?.[0]?.id;
   const { data: inventory } = useInventory(firstPropertyId);
 
-  const priorityData = useMemo(() => buildPriorityData(incidents || []), [incidents]);
-  const statusData = useMemo(() => buildStatusData(incidents || []), [incidents]);
+  const activeIncidents = useMemo(() => (incidents || []).filter((i) => i.status !== 'resolved'), [incidents]);
+  const priorityData = useMemo(() => buildPriorityData(activeIncidents), [activeIncidents]);
+  const statusData = useMemo(() => buildStatusData(activeIncidents), [activeIncidents]);
   const itemsBelowExpected = useMemo(
     () => (inventory || []).filter((item) => item.current_quantity < item.expected_quantity),
     [inventory],
@@ -224,7 +225,7 @@ export default function DashboardPage() {
 
             {/* Pie — Incidents by Status */}
             <div className="overflow-hidden rounded-xl bg-card-bg shadow-card">
-              <h3 className="px-6 pt-6 text-sm font-semibold text-text-primary">Incidentes por Estado</h3>
+              <h3 className="px-6 pt-6 text-sm font-semibold text-text-primary">Incidentes Activos por Estado</h3>
               {statusData.length > 0 ? (
                 <div className="px-6 pb-4">
                   <ResponsiveContainer width="100%" height={220}>
@@ -241,7 +242,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="flex h-[220px] items-center justify-center">
-                  <p className="text-sm text-text-muted">Sin incidentes</p>
+                  <p className="text-sm text-text-muted">Sin incidentes activos</p>
                 </div>
               )}
             </div>
