@@ -153,8 +153,9 @@ export default function DashboardPage() {
   const { data: inventory } = useInventory(firstPropertyId);
 
   const activeIncidents = useMemo(() => (incidents || []).filter((i) => i.status !== 'resolved'), [incidents]);
+  const recentIncidents = useMemo(() => (incidents || []).slice(0, 10), [incidents]);
   const priorityData = useMemo(() => buildPriorityData(activeIncidents), [activeIncidents]);
-  const statusData = useMemo(() => buildStatusData(incidents || []), [incidents]);
+  const statusData = useMemo(() => buildStatusData(recentIncidents), [recentIncidents]);
   const itemsBelowExpected = useMemo(
     () => (inventory || []).filter((item) => item.current_quantity < item.expected_quantity),
     [inventory],
