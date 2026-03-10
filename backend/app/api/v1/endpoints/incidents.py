@@ -117,6 +117,7 @@ async def create_incident(
     )
 
     created = await repo.create(new_incident)
+    await db.commit()
     return _incident_to_response(created)
 
 
@@ -156,5 +157,7 @@ async def update_incident_status(
 
     if updated is None:
         raise HTTPException(status_code=404, detail="Incident not found")
+
+    await db.commit()
 
     return _incident_to_response(updated)
